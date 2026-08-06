@@ -9,15 +9,20 @@
 <body>
   <div id="canvas-container"></div>
 
-  <!-- Barra de Herramientas Flotante Bento/Glassmorphism -->
-  <div class="toolbar">
-    <button id="tool-pen" class="btn active">✏️ Pluma</button>
-    <button id="tool-highlighter" class="btn">🖍️ Resaltador</button>
-    <button id="tool-lasso" class="btn">✂️ Lazo</button>
-    <button id="tool-math" class="btn">🧮 Función f(x)</button>
-    <input type="color" id="color-picker" class="color-picker" value="#ffffff">
-    <button id="btn-qr" class="btn">📱 QR</button>
-    <button id="btn-clear" class="btn" style="color: #ef4444;">🗑️ Limpiar</button>
+  <!-- Wrapper de Barra de Herramientas Flotante Bento/Glassmorphism -->
+  <div class="toolbar-wrapper">
+    <!-- Botón Desplegable para Móviles -->
+    <button id="toolbar-toggle" class="toolbar-toggle">🎨</button>
+
+    <div id="toolbar" class="toolbar">
+      <button id="tool-pen" class="btn active">✏️ Pluma</button>
+      <button id="tool-highlighter" class="btn">🖍️ Resaltador</button>
+      <button id="tool-lasso" class="btn">✂️ Lazo</button>
+      <button id="tool-math" class="btn">🧮 Función f(x)</button>
+      <input type="color" id="color-picker" class="color-picker" value="#ffffff">
+      <button id="btn-qr" class="btn">📱 QR</button>
+      <button id="btn-clear" class="btn" style="color: #ef4444;">🗑️ Limpiar</button>
+    </div>
   </div>
 
   <!-- Modal de Código QR -->
@@ -37,7 +42,6 @@
     import { LassoTool } from './js/LassoTool.js';
     import { MathSuite } from './js/MathSuite.js';
 
-    // Generación o extracción de Room ID
     const urlParams = new URLSearchParams(window.location.search);
     let roomId = urlParams.get('room');
     if (!roomId || !/^[a-zA-Z0-9_-]{16,32}$/.test(roomId)) {
@@ -49,7 +53,6 @@
     const engine = new CanvasEngine(container);
     const storage = new StorageManager(roomId);
 
-    // Socket.io con Backoff Exponencial con Jitter
     const socket = io({
       reconnection: true,
       reconnectionDelay: 500,
@@ -63,13 +66,11 @@
       if (updatedScene) engine.setElements(updatedScene);
     });
 
-    // Cargar estado inicial local y solicitar sync a peers
     storage.getScene().then((scene) => {
       engine.setElements(scene);
       socket.emit('sync-request');
     });
 
-    // Inicializar InputManager
     const input = new InputManager(container, {
       onStrokeStart: (stroke) => {
         engine.setActiveStroke({
@@ -93,11 +94,8 @@
             ...engine.activeStroke,
             points: stroke.points
           };
-          // Transfeir de forma inmediata a la Capa Estática local para cero parpadeos
           engine.addElement(completedStroke);
           engine.setActiveStroke(null);
-
-          // Emitir a la red e IndexedDB
           sync.emitElement(completedStroke);
         }
       },
@@ -105,6 +103,14 @@
         engine.setCamera(panX, panY, scale);
       }
     });
+
+    // Menú Desplegable Móvil
+    const toolbarToggle = document.getElementById('toolbar-toggle');
+    const toolbar = document.getElementById('toolbar');
+
+    toolbarToggle.onclick = () => {
+      toolbar.classList.toggle('open');
+    };
 
     // UI Listeners
     document.getElementById('tool-pen').onclick = (e) => {
@@ -144,7 +150,7 @@
       socket.emit('draw-action', { element: { id: 'clear_all', type: 'clear' } });
     };
 
-    // Modal QR con soporte IP LAN/Domain
+    // Modal QR
     const qrBtn = document.getElementById('btn-qr');
     const qrModal = document.getElementById('qr-modal');
     const qrContainer = document.getElementById('qr-container');
@@ -161,6 +167,9 @@
     function setActiveBtn(btn) {
       document.querySelectorAll('.toolbar .btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      if (window.innerWidth <= 600) {
+        toolbar.classList.remove('open');
+      }
     }
   </script>
 </body>
