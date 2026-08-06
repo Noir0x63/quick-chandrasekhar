@@ -17,9 +17,11 @@
     <div id="toolbar" class="toolbar">
       <button id="tool-pen" class="btn active">✏️ Pluma</button>
       <button id="tool-highlighter" class="btn">🖍️ Resaltador</button>
+      <button id="tool-pan" class="btn">✋ Mover Espacio</button>
       <button id="tool-lasso" class="btn">✂️ Lazo</button>
       <button id="tool-math" class="btn">🧮 Función f(x)</button>
       <input type="color" id="color-picker" class="color-picker" value="#ffffff">
+      <button id="btn-reset-view" class="btn">🎯 Reset Vista</button>
       <button id="btn-qr" class="btn">📱 QR</button>
       <button id="btn-clear" class="btn" style="color: #ef4444;">🗑️ Limpiar</button>
     </div>
@@ -121,6 +123,10 @@
       input.setTool('highlighter');
       setActiveBtn(e.target);
     };
+    document.getElementById('tool-pan').onclick = (e) => {
+      input.setTool('pan');
+      setActiveBtn(e.target);
+    };
     document.getElementById('tool-lasso').onclick = (e) => {
       input.setTool('lasso');
       setActiveBtn(e.target);
@@ -140,6 +146,10 @@
         engine.addElement(mathStroke);
         sync.emitElement(mathStroke);
       }
+    };
+    document.getElementById('btn-reset-view').onclick = () => {
+      input.setCamera(0, 0, 1.0);
+      engine.setCamera(0, 0, 1.0);
     };
     document.getElementById('color-picker').onchange = (e) => {
       input.setTool(input.currentTool, e.target.value);
