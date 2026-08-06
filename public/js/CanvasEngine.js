@@ -393,33 +393,21 @@ export class CanvasEngine {
       return;
     }
 
-    // Renderizar KaTeX a HTML String -> SVG -> Image
     try {
       const htmlStr = window.katex.renderToString(el.latex, {
         displayMode: true,
         throwOnError: false
       });
 
-      const svgData = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="600" height="200">
-          <foreignObject width="100%" height="100%">
-            <div xmlns="http://www.w3.org/1999/xhtml" style="color: ${el.color || '#38bdf8'}; font-size: ${el.size || 24}px;">
-              ${htmlStr}
-            </div>
-          </foreignObject>
-        </svg>
-      `;
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="color:${el.color || '#38bdf8'};font-size:${el.size || 24}px;font-family:KaTeX_Main,sans-serif;">${htmlStr}</div></foreignObject></svg>`;
+      const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
 
       const img = new Image();
-      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-
       img.onload = () => {
         this.latexCache.set(cacheKey, img);
-        URL.revokeObjectURL(url);
         this.renderStaticLayer();
       };
-      img.src = url;
+      img.src = svgUrl;
     } catch (err) {
       console.error('[KaTeX Canvas Error]:', err);
     }
