@@ -2,7 +2,6 @@ import { Math2D, simplifyRDP } from './Math2D.js';
 
 /**
  * CanvasEngine.js - Motor de Renderizado Multicapa (Double-Buffering & Offscreen Canvas)
- * Garantiza 60 FPS sostenidos y renderizado acelerado por GPU.
  */
 export class CanvasEngine {
   constructor(containerElement) {
@@ -16,22 +15,18 @@ export class CanvasEngine {
     this.dynamicCanvas = document.createElement('canvas');
     this.dynamicCtx = this.dynamicCanvas.getContext('2d');
 
-    // Ajuste de estilos para apilamiento de capas
     this.setupCanvasStyles();
     this.container.appendChild(this.staticCanvas);
     this.container.appendChild(this.dynamicCanvas);
 
-    // Estado de Cámara (Pan y Zoom)
     this.panX = 0;
     this.panY = 0;
     this.scale = 1.0;
     this.dpr = window.devicePixelRatio || 1;
 
-    // Grafo de Escena local
     this.elements = [];
     this.activeStroke = null;
 
-    // Manejo de Resizing
     this.resize();
     window.addEventListener('resize', () => this.resize());
   }
@@ -90,11 +85,9 @@ export class CanvasEngine {
     ctx.clearRect(0, 0, this.staticCanvas.width, this.staticCanvas.height);
     ctx.scale(this.dpr, this.dpr);
 
-    // Aplicar matriz de vista nativa
     ctx.translate(this.panX, this.panY);
     ctx.scale(this.scale, this.scale);
 
-    // Dibujar elementos confirmados
     for (const el of this.elements) {
       this.drawElement(ctx, el);
     }
@@ -108,11 +101,9 @@ export class CanvasEngine {
     ctx.clearRect(0, 0, this.dynamicCanvas.width, this.dynamicCanvas.height);
     ctx.scale(this.dpr, this.dpr);
 
-    // Aplicar matriz de vista nativa
     ctx.translate(this.panX, this.panY);
     ctx.scale(this.scale, this.scale);
 
-    // Dibujar trazo activo
     if (this.activeStroke) {
       this.drawElement(ctx, this.activeStroke);
     }
@@ -125,7 +116,7 @@ export class CanvasEngine {
 
     if (el.type === 'stroke') {
       const points = el.points;
-      if (!points || points.length < 4) return;
+      if (!points || points.length < 2) return;
 
       ctx.save();
       ctx.beginPath();
@@ -140,8 +131,12 @@ export class CanvasEngine {
       }
 
       ctx.moveTo(points[0], points[1]);
-      for (let i = 2; i < points.length; i += 2) {
-        ctx.lineTo(points[i], points[i + 1]);
+      if (points.length === 2) {
+        ctx.lineTo(points[0] + 0.1, points[1] + 0.1);
+      } else {
+        for (let i = 2; i < points.length; i += 2) {
+          ctx.lineTo(points[i], points[i + 1]);
+        }
       }
 
       ctx.stroke();

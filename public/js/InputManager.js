@@ -15,13 +15,11 @@ export class InputManager {
     this.currentPoints = [];
     this.activePointerId = null;
 
-    // Estado de Cámara local
     this.panX = 0;
     this.panY = 0;
     this.scale = 1.0;
 
-    // Herramienta activa
-    this.currentTool = 'pen'; // 'pen', 'highlighter', 'eraser'
+    this.currentTool = 'pen';
     this.currentColor = '#ffffff';
     this.currentWidth = 4;
 
@@ -49,7 +47,6 @@ export class InputManager {
   }
 
   handlePointerDown(e) {
-    // Palm Rejection & Multi-touch filtering
     if (!e.isPrimary && e.pointerType === 'touch') return;
 
     this.isDrawing = true;
@@ -62,8 +59,8 @@ export class InputManager {
     this.onStrokeStart({
       tool: this.currentTool,
       color: this.currentColor,
-      width: this.currentWidth / this.scale, // Grosor normalizado a espacio de mundo
-      points: this.currentPoints
+      width: this.currentWidth / this.scale,
+      points: [...this.currentPoints]
     });
   }
 
@@ -74,7 +71,7 @@ export class InputManager {
     this.currentPoints.push(world.x, world.y);
 
     this.onStrokeMove({
-      points: this.currentPoints
+      points: [...this.currentPoints]
     });
   }
 
@@ -86,8 +83,9 @@ export class InputManager {
       this.target.releasePointerCapture(e.pointerId);
     }
 
-    // Aplicar simplificación geométrica RDP antes de enviar/persistir
-    const simplifiedPoints = simplifyRDP(this.currentPoints, 1.0 / this.scale);
+    // Preservar la secuencia de puntos completa
+    const finalPoints = [...this.currentPoints];
+    const simplifiedPoints = finalPoints.length > 4 ? simplifyRDP(finalPoints, 0.5 / this.scale) : finalPoints;
 
     this.onStrokeEnd({
       tool: this.currentTool,
@@ -105,7 +103,6 @@ export class InputManager {
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     const newScale = Math.max(0.1, Math.min(50, this.scale * zoomFactor));
 
-    // Zoom centrado en el puntero
     const mouseX = e.clientX;
     const mouseY = e.clientY;
 

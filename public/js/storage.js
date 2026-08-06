@@ -9,10 +9,6 @@ export class StorageManager {
     this.storageKey = `canvas_elements_${this.roomId}`;
   }
 
-  /**
-   * Obtiene la colección completa de elementos guardados localmente.
-   * @returns {Promise<Array>}
-   */
   async getScene() {
     try {
       const sceneData = await get(this.storageKey);
@@ -23,10 +19,6 @@ export class StorageManager {
     }
   }
 
-  /**
-   * Guarda o actualiza un elemento de forma idempotente (evita duplicados).
-   * @param {Object} element 
-   */
   async saveElement(element) {
     if (!element || !element.id) return;
     try {
@@ -34,12 +26,8 @@ export class StorageManager {
       const existingIndex = currentScene.findIndex((el) => el.id === element.id);
 
       if (existingIndex >= 0) {
-        // Actualización si el timestamp es superior o igual (LWW / Lamport)
-        if (element.updatedAt >= (currentScene[existingIndex].updatedAt || 0)) {
-          currentScene[existingIndex] = element;
-        }
+        currentScene[existingIndex] = element;
       } else {
-        // Inserción de elemento nuevo
         currentScene.push(element);
       }
 
@@ -49,10 +37,6 @@ export class StorageManager {
     }
   }
 
-  /**
-   * Guarda una colección masiva de elementos (usado en la hidratación por Chunks).
-   * @param {Array} elements 
-   */
   async saveBatch(elements) {
     if (!Array.isArray(elements) || elements.length === 0) return;
     try {
@@ -61,10 +45,7 @@ export class StorageManager {
 
       for (const el of elements) {
         if (!el || !el.id) continue;
-        const existing = map.get(el.id);
-        if (!existing || (el.updatedAt || 0) >= (existing.updatedAt || 0)) {
-          map.set(el.id, el);
-        }
+        map.set(el.id, el);
       }
 
       const updatedScene = Array.from(map.values());
@@ -74,10 +55,6 @@ export class StorageManager {
     }
   }
 
-  /**
-   * Elimina un elemento por su ID.
-   * @param {string} elementId 
-   */
   async deleteElement(elementId) {
     try {
       const currentScene = await this.getScene();
@@ -88,9 +65,6 @@ export class StorageManager {
     }
   }
 
-  /**
-   * Vacía la escena local completa.
-   */
   async clearScene() {
     try {
       await del(this.storageKey);

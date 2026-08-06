@@ -2,85 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Interactive Canvas - Pizarra Infinito-Bidireccional Real-Time</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: #121214;
-      color: #f4f4f5;
-    }
-    #canvas-container {
-      width: 100%;
-      height: 100%;
-      position: relative;
-    }
-    /* Toolbar Glassmorphism UI */
-    .toolbar {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      display: flex;
-      gap: 8px;
-      padding: 8px 16px;
-      background: rgba(24, 24, 27, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-    }
-    .btn {
-      background: transparent;
-      border: none;
-      color: #a1a1aa;
-      padding: 8px 12px;
-      font-size: 14px;
-      font-weight: 500;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .btn:hover, .btn.active {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
-    }
-    .color-picker {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      cursor: pointer;
-      align-self: center;
-    }
-    /* Modal QR */
-    #qr-modal {
-      display: none;
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      z-index: 101;
-      padding: 16px;
-      background: rgba(24, 24, 27, 0.9);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      text-align: center;
-    }
-    #qr-container canvas {
-      border-radius: 8px;
-    }
-  </style>
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <div id="canvas-container"></div>
@@ -98,9 +22,9 @@
 
   <!-- Modal de Código QR -->
   <div id="qr-modal">
-    <p style="margin-bottom: 8px; font-size: 12px; color: #a1a1aa;">Escanea para conectar dispositivo</p>
+    <p style="margin-bottom: 12px; font-size: 13px; color: #a1a1aa; font-weight: 500;">Escanea para conectar dispositivo</p>
     <div id="qr-container"></div>
-    <p id="qr-url-text" style="margin-top: 8px; font-size: 10px; color: #71717a; word-break: break-all; max-width: 200px;"></p>
+    <p id="qr-url-text" style="margin-top: 10px; font-size: 11px; color: #71717a; word-break: break-all; max-width: 220px; font-family: monospace;"></p>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -139,7 +63,7 @@
       if (updatedScene) engine.setElements(updatedScene);
     });
 
-    // Cargar estado inicial local
+    // Cargar estado inicial local y solicitar sync a peers
     storage.getScene().then((scene) => {
       engine.setElements(scene);
       socket.emit('sync-request');
@@ -165,8 +89,11 @@
       },
       onStrokeEnd: (stroke) => {
         if (engine.activeStroke) {
-          engine.activeStroke.points = stroke.points;
-          sync.emitElement(engine.activeStroke);
+          const completedStroke = {
+            ...engine.activeStroke,
+            points: stroke.points
+          };
+          sync.emitElement(completedStroke);
           engine.setActiveStroke(null);
         }
       },
@@ -212,13 +139,12 @@
       socket.emit('draw-action', { element: { id: 'clear_all', type: 'clear' } });
     };
 
-    // Modal QR
+    // Modal QR con soporte IP LAN/Domain
     const qrBtn = document.getElementById('btn-qr');
     const qrModal = document.getElementById('qr-modal');
     const qrContainer = document.getElementById('qr-container');
     const qrUrlText = document.getElementById('qr-url-text');
 
-    // Construir URL completa reemplazando localhost si se accede por IP de LAN
     const currentUrl = window.location.href;
     qrUrlText.innerText = currentUrl;
     QRManager.renderQR(currentUrl, qrContainer);
