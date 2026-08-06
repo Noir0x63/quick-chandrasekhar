@@ -30,7 +30,7 @@ app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 // Configuración de límites y seguridad (E-SWE & Threat Model)
 const ROOM_REGEX = /^[a-zA-Z0-9_-]{16,32}$/;
 const RATE_LIMIT_WINDOW_MS = 1000;
-const MAX_MSGS_PER_SEC = 200;
+const MAX_MSGS_PER_SEC = 500; // Elevado a 500 msgs/seg para permitir trazo y cursor continuo a 60 FPS sin desconexiones
 
 // Servir archivos estáticos
 app.use(express.static('public'));
@@ -56,7 +56,7 @@ io.on('connection', (socket) => {
     
     record.count++;
     if (record.count > MAX_MSGS_PER_SEC) {
-      console.warn(`[RateLimit] Socket ${socket.id} superó el límite de mensajes. Desconectando...`);
+      console.warn(`[RateLimit] Socket ${socket.id} superó el límite de mensajes (${record.count}/s). Desconectando...`);
       return next(new Error('Rate limit exceeded'));
     }
     next();
@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
     socket.to(socket.roomId).emit('draw-action', actionPayload);
   });
 
-  // Evento: Reemplazo / Sincronización completa de Escena (por Undo/Redo global)
+  // Evento: Reemplazo / Sincronización completa de Escena (por Undo/Redo global o Clear)
   socket.on('scene-replace', (scenePayload) => {
     if (!socket.roomId) return;
     socket.to(socket.roomId).emit('scene-replace', scenePayload);
