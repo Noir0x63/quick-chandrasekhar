@@ -360,9 +360,14 @@
             opacity: 1.0
           };
 
-          // Reemplazar el trazo manuscrito por el texto LaTeX formateado
-          engine.removeElement(lastStroke.id);
-          engine.addElement(latexEl);
+          // Reemplazar de forma atómica sin desencadenar un Undo involuntario
+          engine.elements = engine.elements.filter(el => el.id !== lastStroke.id);
+          engine.elements.push(latexEl);
+
+          // Actualizar snapshot de historial con la sustitución realizada
+          engine.historyStack[engine.historyIndex] = engine.elements.map(el => ({ ...el }));
+
+          engine.renderStaticLayer();
           updateUndoRedo();
           sync.emitSceneReplace(engine.elements);
 
