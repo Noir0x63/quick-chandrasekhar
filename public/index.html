@@ -3,90 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Interactive Canvas - Procreate Edition</title>
+  <title>Lienzo Infinito — Procreate Edition</title>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <div id="canvas-container"></div>
 
-  <!-- Barra Superior Estilo Procreate (Top Navbar) -->
+  <!-- =====================================================
+       BARRA SUPERIOR (Navbar estilo Procreate)
+       ===================================================== -->
   <nav class="pro-navbar">
-    <!-- Lado Izquierdo: Galería y Herramientas Globales -->
+    <!-- IZQUIERDA -->
     <div class="pro-nav-group">
       <span class="pro-title">Lienzo Infinito</span>
-      <button id="btn-actions" class="pro-icon-btn" title="Acciones y Ajustes">🔧</button>
-      <button id="tool-lasso" class="pro-icon-btn" title="Selección Lazo">✂️</button>
-      <button id="tool-pan" class="pro-icon-btn" title="Mover Lienzo">✋</button>
+      <button id="btn-actions"   class="pro-icon-btn" title="Acciones">⚙️</button>
+      <button id="btn-undo-nav"  class="pro-icon-btn" title="Deshacer (Ctrl+Z)" disabled>↩️</button>
+      <button id="btn-redo-nav"  class="pro-icon-btn" title="Rehacer (Ctrl+Y)" disabled>↪️</button>
+      <button id="btn-zoom-reset" class="pro-zoom-badge" title="Resetear Zoom">100%</button>
     </div>
 
-    <!-- Lado Derecho: Pinceles, Borrador, Capas y Color -->
+    <!-- DERECHA -->
     <div class="pro-nav-group">
-      <button id="tool-brush" class="pro-icon-btn active" title="Librería de Pinceles">🖌️</button>
-      <button id="tool-highlighter" class="pro-icon-btn" title="Resaltador">🖍️</button>
-      <button id="tool-math" class="pro-icon-btn" title="Función Matemática f(x)">🧮</button>
-      <button id="btn-layers" class="pro-icon-btn" title="Capas">📑</button>
-      
-      <!-- Indicador / Selector de Color estilo Procreate -->
-      <div id="color-circle" class="pro-color-circle" style="background-color: #ffffff;">
-        <input type="color" id="color-picker" class="pro-color-input" value="#ffffff">
+      <!-- Peers online -->
+      <div class="pro-peer-badge" id="peer-badge">
+        <div class="pro-peer-dot" id="peer-dot"></div>
+        <span id="peer-count">0</span>
       </div>
+
+      <!-- Separador visual -->
+      <div style="width:1px; height:22px; background:var(--border); margin:0 4px;"></div>
+
+      <!-- Herramientas -->
+      <button id="tool-pen"         class="pro-icon-btn active" title="Pluma">✏️</button>
+      <button id="tool-highlighter" class="pro-icon-btn" title="Resaltador">🖍️</button>
+      <button id="tool-eraser"      class="pro-icon-btn" title="Borrador">⌫</button>
+      <button id="tool-pan"         class="pro-icon-btn" title="Mover (espacio)">✋</button>
+      <button id="tool-text"        class="pro-icon-btn" title="Texto">T</button>
+      <button id="tool-math"        class="pro-icon-btn" title="Función f(x)">∫</button>
+
+      <!-- Separador -->
+      <div style="width:1px; height:22px; background:var(--border); margin:0 4px;"></div>
+
+      <!-- Color: click abre paleta -->
+      <div id="color-circle" class="pro-color-circle" style="background-color:#ffffff;" title="Color"></div>
     </div>
   </nav>
 
-  <!-- Barra Lateral Izquierda Estilo Procreate (Sliders de Tamaño y Opacidad) -->
+  <!-- =====================================================
+       SIDEBAR IZQUIERDO (Sliders + Undo/Redo)
+       ===================================================== -->
   <aside class="pro-sidebar-left">
+    <!-- Undo -->
+    <button id="btn-undo" class="pro-sidebar-btn" title="Deshacer" disabled>↩</button>
+
+    <!-- Slider Tamaño -->
     <div class="pro-slider-group">
       <label>Tamaño</label>
-      <input type="range" id="slider-size" class="pro-slider-vertical" min="1" max="100" value="4">
+      <input type="range" id="slider-size" class="pro-slider-vertical" min="1" max="100" value="6">
     </div>
+
+    <div class="pro-sidebar-divider"></div>
+
+    <!-- Slider Opacidad -->
     <div class="pro-slider-group">
       <label>Opacidad</label>
-      <input type="range" id="slider-opacity" class="pro-slider-vertical" min="10" max="100" value="100">
+      <input type="range" id="slider-opacity" class="pro-slider-vertical" min="5" max="100" value="100">
     </div>
+
+    <!-- Redo -->
+    <button id="btn-redo" class="pro-sidebar-btn" title="Rehacer" disabled>↪</button>
   </aside>
 
-  <!-- Popover Panel: Menú de Acciones y Ajustes -->
-  <div id="panel-actions" class="pro-popover">
-    <div class="pro-popover-header">
-      <span>Acciones y Ajustes</span>
-    </div>
+  <!-- =====================================================
+       POPOVER — Acciones y Ajustes
+       ===================================================== -->
+  <div id="panel-actions" class="pro-popover" style="top:62px; left:12px; min-width:220px;">
+    <div class="pro-popover-header">Acciones</div>
     <div class="pro-popover-list">
-      <button id="btn-qr" class="pro-popover-item">📱 Emparejar Dispositivo (QR)</button>
-      <button id="btn-reset-view" class="pro-popover-item">🎯 Resetear Cámara (0,0)</button>
-      <button id="btn-clear" class="pro-popover-item" style="color: #f87171;">🗑️ Limpiar Lienzo</button>
+      <button id="btn-qr"       class="pro-popover-item">📱 Emparejar con QR</button>
+      <button id="btn-export"   class="pro-popover-item">⬇️ Exportar PNG</button>
+      <button id="btn-grid"     class="pro-popover-item">⊞ Alternar Cuadrícula</button>
+      <button id="btn-clear"    class="pro-popover-item" style="color:var(--accent-red);">🗑️ Limpiar Lienzo</button>
     </div>
   </div>
 
-  <!-- Modal Popover para Código QR -->
-  <div id="modal-qr" class="pro-popover" style="top: 70px; right: 20px; width: 240px; text-align: center;">
-    <div class="pro-popover-header">
+  <!-- POPOVER — QR Modal -->
+  <div id="modal-qr" class="pro-popover" style="top:62px; left:12px; width:240px; text-align:center;">
+    <div class="pro-popover-header" style="display:flex;justify-content:space-between;">
       <span>Emparejar Dispositivo</span>
+      <button id="btn-qr-close" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;">✕</button>
     </div>
-    <div id="qr-container" style="display: flex; justify-content: center; margin: 10px 0;"></div>
-    <p id="qr-url-text" style="font-size: 10px; color: #71717a; word-break: break-all; font-family: monospace;"></p>
+    <div id="qr-container" style="display:flex;justify-content:center;margin:12px 0;"></div>
+    <p id="qr-url-text" style="font-size:10px;color:var(--text-secondary);word-break:break-all;font-family:monospace;"></p>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script type="module">
-    import { CanvasEngine } from './js/CanvasEngine.js';
-    import { InputManager } from './js/InputManager.js';
+    import { CanvasEngine }  from './js/CanvasEngine.js';
+    import { InputManager }  from './js/InputManager.js';
     import { StorageManager } from './js/storage.js';
-    import { SyncManager } from './js/SyncManager.js';
-    import { QRManager } from './js/QRManager.js';
-    import { LassoTool } from './js/LassoTool.js';
-    import { MathSuite } from './js/MathSuite.js';
+    import { SyncManager }   from './js/SyncManager.js';
+    import { QRManager }     from './js/QRManager.js';
+    import { MathSuite }     from './js/MathSuite.js';
+    import { ColorPalette }  from './js/ColorPalette.js';
 
+    // ── Room ID ──────────────────────────────────────────────
     const urlParams = new URLSearchParams(window.location.search);
     let roomId = urlParams.get('room');
     if (!roomId || !/^[a-zA-Z0-9_-]{16,32}$/.test(roomId)) {
-      roomId = 'room_' + Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
+      roomId = 'room_' + Array.from(crypto.getRandomValues(new Uint8Array(12)),
+        b => b.toString(16).padStart(2,'0')).join('');
       window.history.replaceState({}, '', `?room=${roomId}`);
     }
 
+    // ── Core Modules ─────────────────────────────────────────
     const container = document.getElementById('canvas-container');
-    const engine = new CanvasEngine(container);
-    const storage = new StorageManager(roomId);
+    const engine    = new CanvasEngine(container);
+    const storage   = new StorageManager(roomId);
 
+    // ── Socket ───────────────────────────────────────────────
     const socket = io({
       reconnection: true,
       reconnectionDelay: 500,
@@ -94,10 +129,30 @@
       randomizationFactor: 0.5
     });
 
+    let peersOnline = 0;
+
+    socket.on('connect', () => updatePeerBadge(true));
+    socket.on('disconnect', () => updatePeerBadge(false));
+    socket.on('user-connected', () => { peersOnline++; updatePeerBadge(true); });
+    socket.on('user-disconnected', () => { peersOnline = Math.max(0, peersOnline - 1); updatePeerBadge(true); });
+
+    function updatePeerBadge(connected) {
+      const dot   = document.getElementById('peer-dot');
+      const count = document.getElementById('peer-count');
+      if (!connected) {
+        dot.className = 'pro-peer-dot';
+        count.textContent = '—';
+        return;
+      }
+      dot.className = 'pro-peer-dot online';
+      count.textContent = peersOnline === 0 ? 'Solo' : `+${peersOnline}`;
+    }
+
     socket.emit('join-room', roomId);
 
     const sync = new SyncManager(socket, storage, (updatedScene) => {
       if (updatedScene) engine.setElements(updatedScene);
+      updateUndoRedo();
     });
 
     storage.getScene().then((scene) => {
@@ -105,16 +160,27 @@
       socket.emit('sync-request');
     });
 
+    // ── Input Manager ────────────────────────────────────────
     const input = new InputManager(container, {
       onStrokeStart: (stroke) => {
-        engine.setActiveStroke({
-          id: 'str_' + sync.clientId + '_' + Date.now(),
-          type: 'stroke',
-          color: stroke.color,
-          width: stroke.width,
-          isHighlighter: stroke.tool === 'highlighter',
-          points: stroke.points
-        });
+        if (stroke.tool === 'eraser') {
+          engine.setActiveStroke({
+            id: 'ers_' + sync.clientId + '_' + Date.now(),
+            type: 'eraser',
+            width: stroke.width,
+            points: stroke.points
+          });
+        } else {
+          engine.setActiveStroke({
+            id: 'str_' + sync.clientId + '_' + Date.now(),
+            type: 'stroke',
+            color: stroke.color,
+            width: stroke.width,
+            opacity: stroke.opacity,
+            isHighlighter: stroke.tool === 'highlighter',
+            points: stroke.points
+          });
+        }
       },
       onStrokeMove: (stroke) => {
         if (engine.activeStroke) {
@@ -124,105 +190,261 @@
       },
       onStrokeEnd: (stroke) => {
         if (engine.activeStroke) {
-          const completedStroke = {
+          const completed = {
             ...engine.activeStroke,
             points: stroke.points
           };
-          engine.addElement(completedStroke);
+          engine.addElement(completed);
           engine.setActiveStroke(null);
-          sync.emitElement(completedStroke);
+          updateUndoRedo();
+          sync.emitElement(completed);
         }
       },
       onPanZoom: (panX, panY, scale) => {
         engine.setCamera(panX, panY, scale);
+        updateZoomBadge(scale);
+      },
+      onCursorMove: (sx, sy) => {
+        engine.updateCursor(sx, sy, input.currentWidth, input.currentTool !== 'pan');
       }
     });
 
-    // Procreate Sliders (Tamaño y Opacidad)
-    const sliderSize = document.getElementById('slider-size');
-    const colorPicker = document.getElementById('color-picker');
+    // ── Color Palette ─────────────────────────────────────────
     const colorCircle = document.getElementById('color-circle');
-
-    sliderSize.oninput = (e) => {
-      input.setTool(input.currentTool, input.currentColor, parseFloat(e.target.value));
-    };
-
-    colorPicker.oninput = (e) => {
-      const color = e.target.value;
+    const palette = new ColorPalette(colorCircle, (color) => {
       colorCircle.style.backgroundColor = color;
-      input.setTool(input.currentTool, color, input.currentWidth);
+      input.setTool(input.currentTool, color);
+    });
+
+    colorCircle.addEventListener('click', () => palette.toggle());
+
+    // ── Sliders ───────────────────────────────────────────────
+    document.getElementById('slider-size').oninput = (e) => {
+      input.setTool(input.currentTool, undefined, parseFloat(e.target.value));
     };
 
-    // UI Listeners (Barra Estilo Procreate)
-    const tools = [
-      { id: 'tool-brush', name: 'pen' },
-      { id: 'tool-highlighter', name: 'highlighter' },
-      { id: 'tool-lasso', name: 'lasso' },
-      { id: 'tool-pan', name: 'pan' }
-    ];
+    document.getElementById('slider-opacity').oninput = (e) => {
+      input.setOpacity(parseFloat(e.target.value) / 100);
+    };
 
-    tools.forEach(t => {
-      document.getElementById(t.id).onclick = (e) => {
-        input.setTool(t.name);
-        setActiveToolBtn(e.currentTarget);
+    // ── Tool Buttons ─────────────────────────────────────────
+    const toolMap = {
+      'tool-pen':         'pen',
+      'tool-highlighter': 'highlighter',
+      'tool-eraser':      'eraser',
+      'tool-pan':         'pan'
+    };
+
+    Object.entries(toolMap).forEach(([id, tool]) => {
+      document.getElementById(id).onclick = (e) => {
+        input.setTool(tool);
+        setActiveTool(e.currentTarget);
       };
     });
 
+    // Herramienta de Texto (click en lienzo para posicionar)
+    document.getElementById('tool-text').onclick = (e) => {
+      input.setTool('pan'); // neutralizar input
+      setActiveTool(e.currentTarget);
+      showToast('Haz clic en el lienzo para escribir');
+      container.style.cursor = 'text';
+
+      function onTextClick(ev) {
+        container.removeEventListener('pointerdown', onTextClick);
+        container.style.cursor = 'none';
+        setActiveTool(document.getElementById('tool-pen'));
+        input.setTool('pen');
+
+        const text = prompt('Escribe el texto:', '');
+        if (!text) return;
+
+        const wx = (ev.clientX - engine.panX) / engine.scale;
+        const wy = (ev.clientY - engine.panY) / engine.scale;
+
+        const textEl = {
+          id: 'txt_' + sync.clientId + '_' + Date.now(),
+          type: 'text',
+          text,
+          x: wx,
+          y: wy,
+          color: input.currentColor,
+          opacity: input.currentOpacity,
+          size: Math.max(14, 20 / engine.scale)
+        };
+        engine.addElement(textEl);
+        updateUndoRedo();
+        sync.emitElement(textEl);
+      }
+      container.addEventListener('pointerdown', onTextClick, { once: true });
+    };
+
+    // Función f(x)
     document.getElementById('tool-math').onclick = () => {
-      const fnStr = prompt('Ingresa una función matemática f(x):', 'Math.sin(x)');
-      if (fnStr) {
+      const fnStr = prompt('Función f(x):', 'Math.sin(x)');
+      if (!fnStr) return;
+      try {
         const points = MathSuite.generateFunctionPlot(fnStr, -10, 10, 0.1);
-        const mathStroke = {
+        const el = {
           id: 'math_' + sync.clientId + '_' + Date.now(),
           type: 'stroke',
-          color: input.currentColor,
-          width: 3 / engine.scale,
+          color: '#38bdf8',
+          width: 2 / engine.scale,
+          opacity: 1,
           isHighlighter: false,
-          points: points
+          points
         };
-        engine.addElement(mathStroke);
-        sync.emitElement(mathStroke);
+        engine.addElement(el);
+        updateUndoRedo();
+        sync.emitElement(el);
+      } catch(err) {
+        showToast('❌ Función inválida');
       }
     };
 
-    // Panel de Acciones y QR
-    const btnActions = document.getElementById('btn-actions');
-    const panelActions = document.getElementById('panel-actions');
-    const btnQr = document.getElementById('btn-qr');
-    const modalQr = document.getElementById('modal-qr');
-    const qrContainer = document.getElementById('qr-container');
-    const qrUrlText = document.getElementById('qr-url-text');
+    // ── Undo / Redo ──────────────────────────────────────────
+    function undo() {
+      const elems = engine.undo();
+      if (elems !== undefined) {
+        // Persistir el estado regresado
+        storage.clearScene().then(() => storage.saveBatch(engine.elements));
+        updateUndoRedo();
+        showToast('Deshacer');
+      }
+    }
 
-    btnActions.onclick = () => {
+    function redo() {
+      const elems = engine.redo();
+      if (elems !== undefined) {
+        storage.clearScene().then(() => storage.saveBatch(engine.elements));
+        updateUndoRedo();
+        showToast('Rehacer');
+      }
+    }
+
+    function updateUndoRedo() {
+      const canU = engine.canUndo();
+      const canR = engine.canRedo();
+      ['btn-undo', 'btn-undo-nav'].forEach(id => {
+        const el = document.getElementById(id);
+        el.disabled = !canU;
+      });
+      ['btn-redo', 'btn-redo-nav'].forEach(id => {
+        const el = document.getElementById(id);
+        el.disabled = !canR;
+      });
+    }
+
+    document.getElementById('btn-undo').onclick = undo;
+    document.getElementById('btn-undo-nav').onclick = undo;
+    document.getElementById('btn-redo').onclick = redo;
+    document.getElementById('btn-redo-nav').onclick = redo;
+
+    // Ctrl+Z / Ctrl+Y keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+      // Espacio = herramienta Pan temporal
+      if (e.key === ' ' && !e.repeat) {
+        e.preventDefault();
+        input.setTool('pan');
+        document.getElementById('tool-pan').classList.add('active');
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key === ' ') {
+        input.setTool('pen');
+        setActiveTool(document.getElementById('tool-pen'));
+      }
+    });
+
+    // ── Zoom Badge ────────────────────────────────────────────
+    function updateZoomBadge(scale) {
+      document.getElementById('btn-zoom-reset').textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    document.getElementById('btn-zoom-reset').onclick = () => {
+      input.setCamera(0, 0, 1.0);
+      engine.setCamera(0, 0, 1.0);
+      updateZoomBadge(1.0);
+    };
+
+    // ── Panel Acciones ────────────────────────────────────────
+    const panelActions = document.getElementById('panel-actions');
+    const modalQr      = document.getElementById('modal-qr');
+
+    document.getElementById('btn-actions').onclick = (e) => {
+      e.stopPropagation();
       panelActions.classList.toggle('active');
       modalQr.classList.remove('active');
     };
 
-    btnQr.onclick = () => {
+    // Cerrar paneles al hacer click fuera
+    document.addEventListener('pointerdown', (e) => {
+      if (!panelActions.contains(e.target) && e.target !== document.getElementById('btn-actions')) {
+        panelActions.classList.remove('active');
+      }
+      if (!modalQr.contains(e.target) && e.target !== document.getElementById('btn-qr')) {
+        modalQr.classList.remove('active');
+      }
+    });
+
+    document.getElementById('btn-qr').onclick = () => {
       panelActions.classList.remove('active');
       modalQr.classList.toggle('active');
-      const currentUrl = window.location.href;
-      qrUrlText.innerText = currentUrl;
-      QRManager.renderQR(currentUrl, qrContainer);
+      const url = window.location.href;
+      document.getElementById('qr-url-text').textContent = url;
+      QRManager.renderQR(url, document.getElementById('qr-container'));
     };
 
-    document.getElementById('btn-reset-view').onclick = () => {
-      input.setCamera(0, 0, 1.0);
-      engine.setCamera(0, 0, 1.0);
+    document.getElementById('btn-qr-close').onclick = () => modalQr.classList.remove('active');
+
+    document.getElementById('btn-export').onclick = () => {
+      engine.exportPNG();
       panelActions.classList.remove('active');
+      showToast('⬇️ Exportando PNG…');
+    };
+
+    document.getElementById('btn-grid').onclick = () => {
+      engine.toggleGrid();
+      panelActions.classList.remove('active');
+      showToast('Cuadrícula ' + (engine.showGrid ? 'activada' : 'desactivada'));
     };
 
     document.getElementById('btn-clear').onclick = async () => {
+      if (!confirm('¿Limpiar todo el lienzo? Esta acción no se puede deshacer.')) return;
       await storage.clearScene();
       engine.setElements([]);
+      engine.historyStack = [[]];
+      engine.historyIndex = 0;
+      updateUndoRedo();
       socket.emit('draw-action', { element: { id: 'clear_all', type: 'clear' } });
       panelActions.classList.remove('active');
+      showToast('🗑️ Lienzo limpio');
     };
 
-    function setActiveToolBtn(btn) {
-      document.querySelectorAll('.pro-icon-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    // ── Active Tool State ────────────────────────────────────
+    function setActiveTool(btn) {
+      document.querySelectorAll('.pro-icon-btn').forEach(b => b.classList.remove('active', 'active-red'));
+      btn.classList.add(btn.id === 'tool-eraser' ? 'active-red' : 'active');
     }
+
+    // ── Toast ─────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      let t = document.querySelector('.pro-toast');
+      if (t) t.remove();
+      t = document.createElement('div');
+      t.className = 'pro-toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t && t.remove(), 2000);
+    }
+
+    // Init
+    updateZoomBadge(1.0);
+    updatePeerBadge(false);
   </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 import { Math2D, simplifyRDP } from './Math2D.js';
 
 /**
- * InputManager.js - Gestor de Eventos de Entrada PointerEvents con Soporte Completo de Navegación Espacial (Pan & Zoom Multi-Touch).
+ * InputManager.js - Gestor de Entrada Completo con Pan/Zoom Multi-Touch, Eraser, Opacidad y Cursor CSS.
  */
 export class InputManager {
   constructor(targetElement, callbacks = {}) {
@@ -10,27 +10,30 @@ export class InputManager {
     this.onStrokeMove = callbacks.onStrokeMove || (() => {});
     this.onStrokeEnd = callbacks.onStrokeEnd || (() => {});
     this.onPanZoom = callbacks.onPanZoom || (() => {});
+    this.onCursorMove = callbacks.onCursorMove || (() => {});
 
     this.isDrawing = false;
+    this.isPanning = false;
     this.currentPoints = [];
     this.activePointerId = null;
 
-    // Estado de Cámara Local
     this.panX = 0;
     this.panY = 0;
     this.scale = 1.0;
 
-    // Herramientas: 'pen', 'highlighter', 'lasso', 'pan'
+    // Herramientas: 'pen', 'highlighter', 'eraser', 'lasso', 'pan', 'text'
     this.currentTool = 'pen';
     this.currentColor = '#ffffff';
-    this.currentWidth = 4;
+    this.currentWidth = 6;
+    this.currentOpacity = 1.0;
 
-    // Seguimiento de Punteros para Gestos Multi-Touch (Pan & Zoom con 2 dedos o Modo Mover)
+    // Multi-touch state
     this.activePointers = new Map();
     this.lastPinchDist = 0;
     this.lastPinchCenter = { x: 0, y: 0 };
 
     this.bindEvents();
+    this.applyCursorStyle();
   }
 
   setCamera(panX, panY, scale) {
@@ -39,10 +42,21 @@ export class InputManager {
     this.scale = scale;
   }
 
-  setTool(tool, color, width) {
+  setTool(tool, color, width, opacity) {
     this.currentTool = tool;
-    if (color) this.currentColor = color;
-    if (width) this.currentWidth = width;
+    if (color !== undefined) this.currentColor = color;
+    if (width !== undefined) this.currentWidth = width;
+    if (opacity !== undefined) this.currentOpacity = opacity;
+    this.applyCursorStyle();
+  }
+
+  setOpacity(opacity) {
+    this.currentOpacity = Math.max(0.05, Math.min(1.0, opacity));
+  }
+
+  applyCursorStyle() {
+    // Ocultar cursor nativo — usamos cursor ring en canvas
+    this.target.style.cursor = this.currentTool === 'pan' ? 'grab' : 'none';
   }
 
   bindEvents() {
@@ -50,13 +64,16 @@ export class InputManager {
     this.target.addEventListener('pointermove', (e) => this.handlePointerMove(e));
     this.target.addEventListener('pointerup', (e) => this.handlePointerUp(e));
     this.target.addEventListener('pointercancel', (e) => this.handlePointerUp(e));
+    this.target.addEventListener('pointerleave', (e) => {
+      this.onCursorMove(-1000, -1000);
+    });
     this.target.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false });
   }
 
   handlePointerDown(e) {
     this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-    // Si hay 2 o más dedos en la pantalla, se activa el modo Pan/Zoom Multi-Touch automáticamente
+    // Gesto con 2 dedos → Pan/Zoom multi-touch
     if (this.activePointers.size >= 2) {
       if (this.isDrawing) {
         this.isDrawing = false;
@@ -66,16 +83,17 @@ export class InputManager {
       return;
     }
 
-    // Si la herramienta activa es 'pan' (Mover Mano) o toque secundario
-    if (this.currentTool === 'pan' || e.button === 1 || e.button === 2) {
+    // Modo Mover Mano
+    if (this.currentTool === 'pan') {
       this.isPanning = true;
       this.lastPanX = e.clientX;
       this.lastPanY = e.clientY;
+      this.target.style.cursor = 'grabbing';
       this.target.setPointerCapture(e.pointerId);
       return;
     }
 
-    // Modo Dibujo (Pluma / Resaltador / Lazo) con 1 solo dedo o lápiz
+    // Modo Dibujo
     if (!e.isPrimary && e.pointerType === 'touch') return;
 
     this.isDrawing = true;
@@ -88,23 +106,28 @@ export class InputManager {
     this.onStrokeStart({
       tool: this.currentTool,
       color: this.currentColor,
-      width: this.currentWidth / this.scale,
+      width: this.currentTool === 'eraser' ? this.currentWidth * 3 : this.currentWidth / this.scale,
+      opacity: this.currentOpacity,
       points: [...this.currentPoints]
     });
   }
 
   handlePointerMove(e) {
+    // Actualizar posición en el mapa de punteros activos
     if (this.activePointers.has(e.pointerId)) {
       this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     }
 
-    // Gestos con 2 dedos (Pinch Zoom + Pan)
+    // Emitir posición del cursor para el ring visual
+    this.onCursorMove(e.clientX, e.clientY);
+
+    // Pinch Zoom con 2 dedos
     if (this.activePointers.size >= 2) {
       this.handlePinchGesture();
       return;
     }
 
-    // Desplazamiento en Modo Mover Mano ('pan')
+    // Pan con herramienta mano
     if (this.isPanning) {
       const dx = e.clientX - this.lastPanX;
       const dy = e.clientY - this.lastPanY;
@@ -112,20 +135,17 @@ export class InputManager {
       this.panY += dy;
       this.lastPanX = e.clientX;
       this.lastPanY = e.clientY;
-
       this.onPanZoom(this.panX, this.panY, this.scale);
       return;
     }
 
-    // Actualización de trazo activo
+    // Trazo activo
     if (!this.isDrawing || e.pointerId !== this.activePointerId) return;
 
     const world = Math2D.screenToWorld(e.clientX, e.clientY, this.panX, this.panY, this.scale);
     this.currentPoints.push(world.x, world.y);
 
-    this.onStrokeMove({
-      points: [...this.currentPoints]
-    });
+    this.onStrokeMove({ points: [...this.currentPoints] });
   }
 
   handlePointerUp(e) {
@@ -133,6 +153,7 @@ export class InputManager {
 
     if (this.isPanning) {
       this.isPanning = false;
+      this.target.style.cursor = 'grab';
       if (this.target.hasPointerCapture(e.pointerId)) {
         this.target.releasePointerCapture(e.pointerId);
       }
@@ -147,12 +168,13 @@ export class InputManager {
     }
 
     const finalPoints = [...this.currentPoints];
-    const simplifiedPoints = finalPoints.length > 4 ? simplifyRDP(finalPoints, 0.2 / this.scale) : finalPoints;
+    const simplifiedPoints = finalPoints.length > 4 ? simplifyRDP(finalPoints, 0.15 / this.scale) : finalPoints;
 
     this.onStrokeEnd({
       tool: this.currentTool,
       color: this.currentColor,
-      width: this.currentWidth / this.scale,
+      width: this.currentTool === 'eraser' ? this.currentWidth * 3 : this.currentWidth / this.scale,
+      opacity: this.currentOpacity,
       points: simplifiedPoints
     });
 
@@ -162,6 +184,7 @@ export class InputManager {
 
   initPinchGesture() {
     const pts = Array.from(this.activePointers.values());
+    if (pts.length < 2) return;
     this.lastPinchDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
     this.lastPinchCenter = {
       x: (pts[0].x + pts[1].x) / 2,
@@ -179,10 +202,15 @@ export class InputManager {
       y: (pts[0].y + pts[1].y) / 2
     };
 
-    const zoomFactor = newDist / (this.lastPinchDist || newDist);
-    const newScale = Math.max(0.1, Math.min(50, this.scale * zoomFactor));
+    if (this.lastPinchDist === 0) {
+      this.lastPinchDist = newDist;
+      this.lastPinchCenter = newCenter;
+      return;
+    }
 
-    // Pan + Zoom simultáneo alrededor del centro de pinch
+    const zoomFactor = newDist / this.lastPinchDist;
+    const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
+
     const dx = newCenter.x - this.lastPinchCenter.x;
     const dy = newCenter.y - this.lastPinchCenter.y;
 
@@ -199,13 +227,9 @@ export class InputManager {
   handleWheel(e) {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    const newScale = Math.max(0.1, Math.min(50, this.scale * zoomFactor));
-
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
-    const newPanX = mouseX - (mouseX - this.panX) * (newScale / this.scale);
-    const newPanY = mouseY - (mouseY - this.panY) * (newScale / this.scale);
+    const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
+    const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
+    const newPanY = e.clientY - (e.clientY - this.panY) * (newScale / this.scale);
 
     this.panX = newPanX;
     this.panY = newPanY;
