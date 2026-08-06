@@ -116,6 +116,10 @@ export class InputManager {
   }
 
   handlePointerMove(e) {
+    if (this.activePointers.has(e.pointerId)) {
+      this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
     const rect = this.target.getBoundingClientRect();
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
