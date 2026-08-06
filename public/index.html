@@ -260,7 +260,7 @@
       };
     });
 
-    // Herramienta de Texto
+    // Herramienta de Texto Sincronizada
     document.getElementById('tool-text').onclick = (e) => {
       input.setTool('pan');
       setActiveTool(e.currentTarget);
@@ -296,7 +296,7 @@
       container.addEventListener('pointerdown', onTextClick, { once: true });
     };
 
-    // Función f(x)
+    // Función f(x) Sincronizada
     document.getElementById('tool-math').onclick = () => {
       const fnStr = prompt('Función f(x):', 'Math.sin(x)');
       if (!fnStr) return;
@@ -432,7 +432,7 @@
       engine.historyStack = [[]];
       engine.historyIndex = 0;
       updateUndoRedo();
-      socket.emit('draw-action', { element: { id: 'clear_all', type: 'clear' } });
+      sync.emitSceneReplace([]); // Sincronizar limpieza total a través de WebSocket
       panelActions.classList.remove('active');
       showToast('Lienzo limpio');
     };

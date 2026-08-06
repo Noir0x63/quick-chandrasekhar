@@ -133,10 +133,8 @@ export class SyncManager {
       element
     };
 
-    this.storage.saveElement(element).then(() => {
-      this.onSceneUpdated();
-    });
-
+    // Almacenar localmente e informar al motor sin duplicar llamada si la promesa resuelve
+    this.storage.saveElement(element);
     this.socket.emit('draw-action', payload);
   }
 
@@ -149,9 +147,7 @@ export class SyncManager {
     };
 
     this.storage.clearScene().then(() => {
-      this.storage.saveBatch(elements).then(() => {
-        this.onSceneUpdated(elements);
-      });
+      this.storage.saveBatch(elements);
     });
 
     this.socket.emit('scene-replace', payload);
