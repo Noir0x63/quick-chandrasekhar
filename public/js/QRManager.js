@@ -1,4 +1,4 @@
-import QRCode from '../node_modules/qrcode/lib/browser.js';
+import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm';
 
 /**
  * QRManager.js - Generador Local y 100% preciso de Códigos QR.
