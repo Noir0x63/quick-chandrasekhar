@@ -99,7 +99,11 @@ export class InputManager {
     this.activePointerId = e.pointerId;
     this.target.setPointerCapture(e.pointerId);
 
-    const world = Math2D.screenToWorld(e.clientX, e.clientY, this.panX, this.panY, this.scale);
+    const rect = this.target.getBoundingClientRect();
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+
+    const world = Math2D.screenToWorld(clientX, clientY, this.panX, this.panY, this.scale);
     this.currentPoints = [world.x, world.y];
 
     this.onStrokeStart({
@@ -112,11 +116,11 @@ export class InputManager {
   }
 
   handlePointerMove(e) {
-    if (this.activePointers.has(e.pointerId)) {
-      this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    }
+    const rect = this.target.getBoundingClientRect();
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
 
-    const world = Math2D.screenToWorld(e.clientX, e.clientY, this.panX, this.panY, this.scale);
+    const world = Math2D.screenToWorld(clientX, clientY, this.panX, this.panY, this.scale);
     this.onCursorMove(e.clientX, e.clientY, world.x, world.y);
 
     if (this.activePointers.size >= 2) {
@@ -221,10 +225,14 @@ export class InputManager {
   handleWheel(e) {
     e.preventDefault();
 
+    const rect = this.target.getBoundingClientRect();
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
-    const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
-    const newPanY = e.clientY - (e.clientY - this.panY) * (newScale / this.scale);
+    const newPanX = clientX - (clientX - this.panX) * (newScale / this.scale);
+    const newPanY = clientY - (clientY - this.panY) * (newScale / this.scale);
 
     this.panX = newPanX;
     this.panY = newPanY;
