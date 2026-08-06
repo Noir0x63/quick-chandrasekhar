@@ -77,6 +77,9 @@
       border-radius: 16px;
       text-align: center;
     }
+    #qr-container canvas {
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -97,6 +100,7 @@
   <div id="qr-modal">
     <p style="margin-bottom: 8px; font-size: 12px; color: #a1a1aa;">Escanea para conectar dispositivo</p>
     <div id="qr-container"></div>
+    <p id="qr-url-text" style="margin-top: 8px; font-size: 10px; color: #71717a; word-break: break-all; max-width: 200px;"></p>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -121,7 +125,7 @@
     const engine = new CanvasEngine(container);
     const storage = new StorageManager(roomId);
 
-    // Socket.io con Backoff Exponencial con Jitter (E-SWE Hardening)
+    // Socket.io con Backoff Exponencial con Jitter
     const socket = io({
       reconnection: true,
       reconnectionDelay: 500,
@@ -212,7 +216,12 @@
     const qrBtn = document.getElementById('btn-qr');
     const qrModal = document.getElementById('qr-modal');
     const qrContainer = document.getElementById('qr-container');
-    qrContainer.innerHTML = QRManager.generateQRSVG(window.location.href);
+    const qrUrlText = document.getElementById('qr-url-text');
+
+    // Construir URL completa reemplazando localhost si se accede por IP de LAN
+    const currentUrl = window.location.href;
+    qrUrlText.innerText = currentUrl;
+    QRManager.renderQR(currentUrl, qrContainer);
 
     qrBtn.onclick = () => {
       qrModal.style.display = qrModal.style.display === 'block' ? 'none' : 'block';
