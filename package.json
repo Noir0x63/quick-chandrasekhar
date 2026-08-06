@@ -1,0 +1,36 @@
+{
+  "name": "quick-chandrasekhar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Noir0x63/quick-chandrasekhar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Noir0x63/quick-chandrasekhar/issues"
+  },
+  "homepage": "https://github.com/Noir0x63/quick-chandrasekhar#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "idb-keyval": "^6.3.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "eslint": "^10.8.0",
+    "prettier": "^3.9.6",
+    "socket.io-client": "^4.8.3",
+    "vitest": "^4.1.10"
+  }
+}
