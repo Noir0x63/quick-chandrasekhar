@@ -1,7 +1,7 @@
 import { Math2D, simplifyRDP } from './Math2D.js';
 
 /**
- * InputManager.js - Gestor de Entrada Completo con Pan/Zoom Multi-Touch, Eraser, Opacidad y Cursor CSS.
+ * InputManager.js - Gestor de Entrada Completo con Pan/Zoom Multi-Touch, Rueda de Ratón (Shift/Alt o Clic Central), Eraser, Opacidad y Cursor CSS.
  */
 export class InputManager {
   constructor(targetElement, callbacks = {}) {
@@ -55,7 +55,6 @@ export class InputManager {
   }
 
   applyCursorStyle() {
-    // Ocultar cursor nativo — usamos cursor ring en canvas
     this.target.style.cursor = this.currentTool === 'pan' ? 'grab' : 'none';
   }
 
@@ -83,8 +82,8 @@ export class InputManager {
       return;
     }
 
-    // Modo Mover Mano
-    if (this.currentTool === 'pan') {
+    // Clic central de rueda de ratón (button 1) o herramienta Mover
+    if (this.currentTool === 'pan' || e.button === 1) {
       this.isPanning = true;
       this.lastPanX = e.clientX;
       this.lastPanY = e.clientY;
@@ -113,21 +112,17 @@ export class InputManager {
   }
 
   handlePointerMove(e) {
-    // Actualizar posición en el mapa de punteros activos
     if (this.activePointers.has(e.pointerId)) {
       this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     }
 
-    // Emitir posición del cursor para el ring visual
     this.onCursorMove(e.clientX, e.clientY);
 
-    // Pinch Zoom con 2 dedos
     if (this.activePointers.size >= 2) {
       this.handlePinchGesture();
       return;
     }
 
-    // Pan con herramienta mano
     if (this.isPanning) {
       const dx = e.clientX - this.lastPanX;
       const dy = e.clientY - this.lastPanY;
@@ -139,7 +134,6 @@ export class InputManager {
       return;
     }
 
-    // Trazo activo
     if (!this.isDrawing || e.pointerId !== this.activePointerId) return;
 
     const world = Math2D.screenToWorld(e.clientX, e.clientY, this.panX, this.panY, this.scale);
@@ -153,7 +147,7 @@ export class InputManager {
 
     if (this.isPanning) {
       this.isPanning = false;
-      this.target.style.cursor = 'grab';
+      this.target.style.cursor = this.currentTool === 'pan' ? 'grab' : 'none';
       if (this.target.hasPointerCapture(e.pointerId)) {
         this.target.releasePointerCapture(e.pointerId);
       }
@@ -226,14 +220,26 @@ export class InputManager {
 
   handleWheel(e) {
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
-    const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
-    const newPanY = e.clientY - (e.clientY - this.panY) * (newScale / this.scale);
 
-    this.panX = newPanX;
-    this.panY = newPanY;
-    this.scale = newScale;
+    // Si se presiona Ctrl o Meta, la rueda hace Zoom.
+    // De lo contrario (rueda por defecto, o con Shift/Alt), desplaza (Pan vertical u horizontal).
+    if (e.ctrlKey || e.metaKey) {
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
+      const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
+      const newPanY = e.clientY - (e.clientY - this.panY) * (newScale / this.scale);
+
+      this.panX = newPanX;
+      this.panY = newPanY;
+      this.scale = newScale;
+    } else {
+      // Pan directo desplazando con la rueda del ratón o Trackpad
+      const dx = e.shiftKey ? e.deltaY : e.deltaX;
+      const dy = e.shiftKey ? 0 : e.deltaY;
+
+      this.panX -= dx;
+      this.panY -= dy;
+    }
 
     this.onPanZoom(this.panX, this.panY, this.scale);
   }
