@@ -12,6 +12,17 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e5 // Límite de 100 KB por paquete (Hardening DoS)
 });
 
+// Configuración de cabeceras HTTP de Seguridad (Content Security Policy)
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;"
+  );
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  next();
+});
+
 // Configuración de límites y seguridad (E-SWE & Threat Model)
 const ROOM_REGEX = /^[a-zA-Z0-9_-]{16,32}$/;
 const RATE_LIMIT_WINDOW_MS = 1000;

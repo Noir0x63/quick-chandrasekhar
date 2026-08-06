@@ -32,7 +32,7 @@
       transform: translateX(-50%);
       z-index: 100;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       padding: 8px 16px;
       background: rgba(24, 24, 27, 0.75);
       backdrop-filter: blur(12px);
@@ -87,8 +87,9 @@
     <button id="tool-pen" class="btn active">✏️ Pluma</button>
     <button id="tool-highlighter" class="btn">🖍️ Resaltador</button>
     <button id="tool-lasso" class="btn">✂️ Lazo</button>
+    <button id="tool-math" class="btn">🧮 Función f(x)</button>
     <input type="color" id="color-picker" class="color-picker" value="#ffffff">
-    <button id="btn-qr" class="btn">📱 Emparejar QR</button>
+    <button id="btn-qr" class="btn">📱 QR</button>
     <button id="btn-clear" class="btn" style="color: #ef4444;">🗑️ Limpiar</button>
   </div>
 
@@ -106,6 +107,7 @@
     import { SyncManager } from './js/SyncManager.js';
     import { QRManager } from './js/QRManager.js';
     import { LassoTool } from './js/LassoTool.js';
+    import { MathSuite } from './js/MathSuite.js';
 
     // Generación o extracción de Room ID
     const urlParams = new URLSearchParams(window.location.search);
@@ -118,7 +120,14 @@
     const container = document.getElementById('canvas-container');
     const engine = new CanvasEngine(container);
     const storage = new StorageManager(roomId);
-    const socket = io();
+
+    // Socket.io con Backoff Exponencial con Jitter (E-SWE Hardening)
+    const socket = io({
+      reconnection: true,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 10000,
+      randomizationFactor: 0.5
+    });
 
     socket.emit('join-room', roomId);
 
@@ -129,7 +138,6 @@
     // Cargar estado inicial local
     storage.getScene().then((scene) => {
       engine.setElements(scene);
-      // Solicitar sync a peers
       socket.emit('sync-request');
     });
 
@@ -175,6 +183,21 @@
     document.getElementById('tool-lasso').onclick = (e) => {
       input.setTool('lasso');
       setActiveBtn(e.target);
+    };
+    document.getElementById('tool-math').onclick = (e) => {
+      const fnStr = prompt('Ingresa una función matemática f(x):', 'Math.sin(x)');
+      if (fnStr) {
+        const points = MathSuite.generateFunctionPlot(fnStr, -10, 10, 0.1);
+        const mathStroke = {
+          id: 'math_' + sync.clientId + '_' + Date.now(),
+          type: 'stroke',
+          color: '#38bdf8',
+          width: 3 / engine.scale,
+          isHighlighter: false,
+          points: points
+        };
+        sync.emitElement(mathStroke);
+      }
     };
     document.getElementById('color-picker').onchange = (e) => {
       input.setTool(input.currentTool, e.target.value);
