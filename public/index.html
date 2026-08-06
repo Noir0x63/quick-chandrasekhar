@@ -109,7 +109,6 @@
     import { MathSuite }     from './js/MathSuite.js';
     import { ColorPalette }  from './js/ColorPalette.js';
 
-    // Inicializar iconos de Lucide
     if (window.lucide) {
       window.lucide.createIcons();
     }
@@ -160,6 +159,16 @@
     const sync = new SyncManager(socket, storage, (updatedScene) => {
       if (updatedScene) engine.setElements(updatedScene);
       updateUndoRedo();
+    }, {
+      onLiveStroke: (socketId, stroke) => {
+        engine.setRemoteActiveStroke(socketId, stroke);
+      },
+      onRemoteCursor: (socketId, cursorData) => {
+        engine.setRemoteCursor(socketId, cursorData);
+      },
+      onUserDisconnected: (socketId) => {
+        engine.removeRemotePeer(socketId);
+      }
     });
 
     storage.getScene().then((scene) => {
@@ -170,29 +179,29 @@
     // ── Input Manager ────────────────────────────────────────
     const input = new InputManager(container, {
       onStrokeStart: (stroke) => {
-        if (stroke.tool === 'eraser') {
-          engine.setActiveStroke({
-            id: 'ers_' + sync.clientId + '_' + Date.now(),
-            type: 'eraser',
-            width: stroke.width,
-            points: stroke.points
-          });
-        } else {
-          engine.setActiveStroke({
-            id: 'str_' + sync.clientId + '_' + Date.now(),
-            type: 'stroke',
-            color: stroke.color,
-            width: stroke.width,
-            opacity: stroke.opacity,
-            isHighlighter: stroke.tool === 'highlighter',
-            points: stroke.points
-          });
-        }
+        const activeObj = stroke.tool === 'eraser' ? {
+          id: 'ers_' + sync.clientId + '_' + Date.now(),
+          type: 'eraser',
+          width: stroke.width,
+          points: stroke.points
+        } : {
+          id: 'str_' + sync.clientId + '_' + Date.now(),
+          type: 'stroke',
+          color: stroke.color,
+          width: stroke.width,
+          opacity: stroke.opacity,
+          isHighlighter: stroke.tool === 'highlighter',
+          points: stroke.points
+        };
+
+        engine.setActiveStroke(activeObj);
+        sync.emitLiveStroke(activeObj);
       },
       onStrokeMove: (stroke) => {
         if (engine.activeStroke) {
           engine.activeStroke.points = stroke.points;
           engine.renderDynamicLayer();
+          sync.emitLiveStroke(engine.activeStroke);
         }
       },
       onStrokeEnd: (stroke) => {
@@ -203,6 +212,7 @@
           };
           engine.addElement(completed);
           engine.setActiveStroke(null);
+          sync.emitLiveStroke(null); // Limpiar trazo en vivo en los demás clientes
           updateUndoRedo();
           sync.emitElement(completed);
         }
@@ -211,8 +221,9 @@
         engine.setCamera(panX, panY, scale);
         updateZoomBadge(scale);
       },
-      onCursorMove: (sx, sy) => {
+      onCursorMove: (sx, sy, wx, wy) => {
         engine.updateCursor(sx, sy, input.currentWidth, input.currentTool !== 'pan');
+        sync.emitCursor(wx, wy, input.currentTool, input.currentColor);
       }
     });
 
@@ -249,9 +260,9 @@
       };
     });
 
-    // Herramienta de Texto (click en lienzo para posicionar)
+    // Herramienta de Texto
     document.getElementById('tool-text').onclick = (e) => {
-      input.setTool('pan'); // neutralizar input
+      input.setTool('pan');
       setActiveTool(e.currentTarget);
       showToast('Haz clic en el lienzo para escribir');
       container.style.cursor = 'text';
@@ -345,7 +356,6 @@
     document.getElementById('btn-redo').onclick = redo;
     document.getElementById('btn-redo-nav').onclick = redo;
 
-    // Ctrl+Z / Ctrl+Y keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }

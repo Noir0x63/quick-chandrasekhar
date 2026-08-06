@@ -30,7 +30,7 @@ app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 // Configuración de límites y seguridad (E-SWE & Threat Model)
 const ROOM_REGEX = /^[a-zA-Z0-9_-]{16,32}$/;
 const RATE_LIMIT_WINDOW_MS = 1000;
-const MAX_MSGS_PER_SEC = 100;
+const MAX_MSGS_PER_SEC = 200; // Incrementado a 200 para trazos suaves en vivo a 60 FPS
 
 // Servir archivos estáticos
 app.use(express.static('public'));
@@ -78,24 +78,30 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('user-connected', { userId: socket.id });
   });
 
-  // Evento: Transmisión de trazos o acciones (Blind Relay Zero-Trust)
+  // Evento: Transmisión de trazos o acciones finalizadas (Blind Relay Zero-Trust)
   socket.on('draw-action', (actionPayload) => {
     if (!socket.roomId) return;
-    // Transmitir ciegamente a todos los demás clientes de la sala
     socket.to(socket.roomId).emit('draw-action', actionPayload);
+  });
+
+  // Evento: Transmisión de trazo en vivo (Stroke Live) mientras el usuario dibuja a 60 FPS
+  socket.on('stroke-live', (data) => {
+    if (!socket.roomId) return;
+    socket.to(socket.roomId).emit('stroke-live', {
+      socketId: socket.id,
+      stroke: data.stroke
+    });
   });
 
   // Evento: Solicitud de sincronización inicial
   socket.on('sync-request', () => {
     if (!socket.roomId) return;
-    // Solicitar el estado actual al primer cliente conectado en la sala
     socket.to(socket.roomId).emit('sync-request', { requesterId: socket.id });
   });
 
   // Evento: Respuesta de sincronización por Chunks
   socket.on('sync-chunk', (chunkPayload) => {
     if (!socket.roomId || !chunkPayload || !chunkPayload.targetId) return;
-    // Enviar el chunk directamente al cliente solicitante
     io.to(chunkPayload.targetId).emit('sync-chunk', chunkPayload);
   });
 

@@ -1,7 +1,7 @@
 import { Math2D, simplifyRDP } from './Math2D.js';
 
 /**
- * InputManager.js - Gestor de Entrada Completo con Pan/Zoom Multi-Touch, Zoom por Rueda de Ratón exclusivo, Eraser, Opacidad y Cursor CSS.
+ * InputManager.js - Gestor de Entrada Completo con Trazo en Tiempo Real (Live Stroke Broadcast).
  */
 export class InputManager {
   constructor(targetElement, callbacks = {}) {
@@ -116,7 +116,8 @@ export class InputManager {
       this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     }
 
-    this.onCursorMove(e.clientX, e.clientY);
+    const world = Math2D.screenToWorld(e.clientX, e.clientY, this.panX, this.panY, this.scale);
+    this.onCursorMove(e.clientX, e.clientY, world.x, world.y);
 
     if (this.activePointers.size >= 2) {
       this.handlePinchGesture();
@@ -136,7 +137,6 @@ export class InputManager {
 
     if (!this.isDrawing || e.pointerId !== this.activePointerId) return;
 
-    const world = Math2D.screenToWorld(e.clientX, e.clientY, this.panX, this.panY, this.scale);
     this.currentPoints.push(world.x, world.y);
 
     this.onStrokeMove({ points: [...this.currentPoints] });
@@ -221,7 +221,6 @@ export class InputManager {
   handleWheel(e) {
     e.preventDefault();
 
-    // La rueda de desplazamiento se encarga EXCLUSIVAMENTE del ZOOM centrado en el cursor del ratón.
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
     const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
