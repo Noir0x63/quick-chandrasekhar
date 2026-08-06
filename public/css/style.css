@@ -1,4 +1,4 @@
-/* CSS3 Design System & Responsive Mobile Layout - Bento Glassmorphic Style */
+/* CSS3 Procreate Dark Mode Ultra-Premium UI Design System */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -16,9 +16,9 @@ body, html {
   height: 100%;
   overflow: hidden;
   position: fixed;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #09090b;
-  color: #f4f4f5;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  background-color: #121214;
+  color: #e4e4e7;
   touch-action: none;
 }
 
@@ -31,147 +31,220 @@ body, html {
   touch-action: none;
 }
 
-/* Toolbar Bento Glassmorphism UI */
-.toolbar-wrapper {
+/* Procreate Top Navigation Bar */
+.pro-navbar {
   position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(20, 20, 23, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pro-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pro-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f4f4f5;
+  letter-spacing: -0.2px;
+  margin-right: 8px;
+}
+
+.pro-icon-btn {
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.15s ease;
+}
+
+.pro-icon-btn:hover, .pro-icon-btn.active {
+  color: #38bdf8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pro-color-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.pro-color-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Procreate Left Sidebar Sliders (Brush Size & Opacity) */
+.pro-sidebar-left {
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 24px;
+  padding: 16px 8px;
+  background: rgba(20, 20, 23, 0.75);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
-.toolbar-toggle {
-  display: none;
-  background: rgba(24, 24, 27, 0.9);
-  color: #f4f4f5;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 18px;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
-}
-
-.toolbar {
+.pro-slider-group {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(24, 24, 27, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  max-width: 95vw;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 8px;
+  height: 140px;
 }
 
-.btn {
-  background: transparent;
-  border: none;
-  color: #a1a1aa;
-  padding: 10px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 12px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px; /* WCAG 2.2 Touch target min size */
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.pro-slider-group label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #71717a;
+  letter-spacing: 0.5px;
 }
 
-.btn:hover, .btn.active {
-  color: #ffffff;
+.pro-slider-vertical {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-.btn:active {
-  transform: translateY(0);
-}
-
-.color-picker {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  outline: none;
+  transform: rotate(-90deg);
+  margin: 55px -55px;
   cursor: pointer;
-  align-self: center;
-  background: transparent;
 }
 
-/* Modal QR Responsive */
-#qr-modal {
+.pro-slider-vertical::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f4f4f5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+/* Procreate Popover Panel (Brushes Library & Tools) */
+.pro-popover {
   display: none;
   position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 101;
-  padding: 20px;
-  background: rgba(24, 24, 27, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 24px;
-  text-align: center;
+  top: 60px;
+  right: 16px;
+  width: 280px;
+  background: rgba(24, 24, 28, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  z-index: 105;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  max-width: 90vw;
+  padding: 16px;
 }
 
-#qr-container canvas {
+.pro-popover.active {
+  display: block;
+}
+
+.pro-popover-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f4f4f5;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pro-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pro-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* Adaptación Responsive Móvil Desplegable */
+.pro-popover-item:hover, .pro-popover-item.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+/* Responsive UI Adjustments for iPhone/Mobile */
 @media (max-width: 600px) {
-  .toolbar-wrapper {
-    top: auto;
-    bottom: 16px;
-    width: auto;
+  .pro-navbar {
+    padding: 0 8px;
+    height: 48px;
   }
-
-  .toolbar-toggle {
-    display: flex;
-    margin-bottom: 8px;
-  }
-
-  .toolbar {
+  .pro-title {
     display: none;
-    flex-direction: column;
-    width: 220px;
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 12px;
-    border-radius: 24px;
-    gap: 8px;
   }
-
-  .toolbar.open {
-    display: flex;
+  .pro-sidebar-left {
+    left: 8px;
+    padding: 12px 6px;
+    gap: 16px;
+    border-radius: 20px;
   }
-
-  .btn {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 10px 14px;
-    font-size: 14px;
+  .pro-slider-group {
+    height: 100px;
   }
-
-  #qr-modal {
-    top: 50%;
-    transform: translate(-50%, -50%);
+  .pro-slider-vertical {
+    width: 90px;
+    margin: 40px -40px;
+  }
+  .pro-popover {
+    right: 8px;
+    left: 8px;
+    width: auto;
   }
 }

@@ -3,35 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Interactive Canvas - Pizarra Infinito-Bidireccional Real-Time</title>
+  <title>Interactive Canvas - Procreate Edition</title>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <div id="canvas-container"></div>
 
-  <!-- Wrapper de Barra de Herramientas Flotante Bento/Glassmorphism -->
-  <div class="toolbar-wrapper">
-    <!-- Botón Desplegable para Móviles -->
-    <button id="toolbar-toggle" class="toolbar-toggle">🎨</button>
+  <!-- Barra Superior Estilo Procreate (Top Navbar) -->
+  <nav class="pro-navbar">
+    <!-- Lado Izquierdo: Galería y Herramientas Globales -->
+    <div class="pro-nav-group">
+      <span class="pro-title">Lienzo Infinito</span>
+      <button id="btn-actions" class="pro-icon-btn" title="Acciones y Ajustes">🔧</button>
+      <button id="tool-lasso" class="pro-icon-btn" title="Selección Lazo">✂️</button>
+      <button id="tool-pan" class="pro-icon-btn" title="Mover Lienzo">✋</button>
+    </div>
 
-    <div id="toolbar" class="toolbar">
-      <button id="tool-pen" class="btn active">✏️ Pluma</button>
-      <button id="tool-highlighter" class="btn">🖍️ Resaltador</button>
-      <button id="tool-pan" class="btn">✋ Mover Espacio</button>
-      <button id="tool-lasso" class="btn">✂️ Lazo</button>
-      <button id="tool-math" class="btn">🧮 Función f(x)</button>
-      <input type="color" id="color-picker" class="color-picker" value="#ffffff">
-      <button id="btn-reset-view" class="btn">🎯 Reset Vista</button>
-      <button id="btn-qr" class="btn">📱 QR</button>
-      <button id="btn-clear" class="btn" style="color: #ef4444;">🗑️ Limpiar</button>
+    <!-- Lado Derecho: Pinceles, Borrador, Capas y Color -->
+    <div class="pro-nav-group">
+      <button id="tool-brush" class="pro-icon-btn active" title="Librería de Pinceles">🖌️</button>
+      <button id="tool-highlighter" class="pro-icon-btn" title="Resaltador">🖍️</button>
+      <button id="tool-math" class="pro-icon-btn" title="Función Matemática f(x)">🧮</button>
+      <button id="btn-layers" class="pro-icon-btn" title="Capas">📑</button>
+      
+      <!-- Indicador / Selector de Color estilo Procreate -->
+      <div id="color-circle" class="pro-color-circle" style="background-color: #ffffff;">
+        <input type="color" id="color-picker" class="pro-color-input" value="#ffffff">
+      </div>
+    </div>
+  </nav>
+
+  <!-- Barra Lateral Izquierda Estilo Procreate (Sliders de Tamaño y Opacidad) -->
+  <aside class="pro-sidebar-left">
+    <div class="pro-slider-group">
+      <label>Tamaño</label>
+      <input type="range" id="slider-size" class="pro-slider-vertical" min="1" max="100" value="4">
+    </div>
+    <div class="pro-slider-group">
+      <label>Opacidad</label>
+      <input type="range" id="slider-opacity" class="pro-slider-vertical" min="10" max="100" value="100">
+    </div>
+  </aside>
+
+  <!-- Popover Panel: Menú de Acciones y Ajustes -->
+  <div id="panel-actions" class="pro-popover">
+    <div class="pro-popover-header">
+      <span>Acciones y Ajustes</span>
+    </div>
+    <div class="pro-popover-list">
+      <button id="btn-qr" class="pro-popover-item">📱 Emparejar Dispositivo (QR)</button>
+      <button id="btn-reset-view" class="pro-popover-item">🎯 Resetear Cámara (0,0)</button>
+      <button id="btn-clear" class="pro-popover-item" style="color: #f87171;">🗑️ Limpiar Lienzo</button>
     </div>
   </div>
 
-  <!-- Modal de Código QR -->
-  <div id="qr-modal">
-    <p style="margin-bottom: 12px; font-size: 13px; color: #a1a1aa; font-weight: 500;">Escanea para conectar dispositivo</p>
-    <div id="qr-container"></div>
-    <p id="qr-url-text" style="margin-top: 10px; font-size: 11px; color: #71717a; word-break: break-all; max-width: 220px; font-family: monospace;"></p>
+  <!-- Modal Popover para Código QR -->
+  <div id="modal-qr" class="pro-popover" style="top: 70px; right: 20px; width: 240px; text-align: center;">
+    <div class="pro-popover-header">
+      <span>Emparejar Dispositivo</span>
+    </div>
+    <div id="qr-container" style="display: flex; justify-content: center; margin: 10px 0;"></div>
+    <p id="qr-url-text" style="font-size: 10px; color: #71717a; word-break: break-all; font-family: monospace;"></p>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -106,39 +138,44 @@
       }
     });
 
-    // Menú Desplegable Móvil
-    const toolbarToggle = document.getElementById('toolbar-toggle');
-    const toolbar = document.getElementById('toolbar');
+    // Procreate Sliders (Tamaño y Opacidad)
+    const sliderSize = document.getElementById('slider-size');
+    const colorPicker = document.getElementById('color-picker');
+    const colorCircle = document.getElementById('color-circle');
 
-    toolbarToggle.onclick = () => {
-      toolbar.classList.toggle('open');
+    sliderSize.oninput = (e) => {
+      input.setTool(input.currentTool, input.currentColor, parseFloat(e.target.value));
     };
 
-    // UI Listeners
-    document.getElementById('tool-pen').onclick = (e) => {
-      input.setTool('pen');
-      setActiveBtn(e.target);
+    colorPicker.oninput = (e) => {
+      const color = e.target.value;
+      colorCircle.style.backgroundColor = color;
+      input.setTool(input.currentTool, color, input.currentWidth);
     };
-    document.getElementById('tool-highlighter').onclick = (e) => {
-      input.setTool('highlighter');
-      setActiveBtn(e.target);
-    };
-    document.getElementById('tool-pan').onclick = (e) => {
-      input.setTool('pan');
-      setActiveBtn(e.target);
-    };
-    document.getElementById('tool-lasso').onclick = (e) => {
-      input.setTool('lasso');
-      setActiveBtn(e.target);
-    };
-    document.getElementById('tool-math').onclick = (e) => {
+
+    // UI Listeners (Barra Estilo Procreate)
+    const tools = [
+      { id: 'tool-brush', name: 'pen' },
+      { id: 'tool-highlighter', name: 'highlighter' },
+      { id: 'tool-lasso', name: 'lasso' },
+      { id: 'tool-pan', name: 'pan' }
+    ];
+
+    tools.forEach(t => {
+      document.getElementById(t.id).onclick = (e) => {
+        input.setTool(t.name);
+        setActiveToolBtn(e.currentTarget);
+      };
+    });
+
+    document.getElementById('tool-math').onclick = () => {
       const fnStr = prompt('Ingresa una función matemática f(x):', 'Math.sin(x)');
       if (fnStr) {
         const points = MathSuite.generateFunctionPlot(fnStr, -10, 10, 0.1);
         const mathStroke = {
           id: 'math_' + sync.clientId + '_' + Date.now(),
           type: 'stroke',
-          color: '#38bdf8',
+          color: input.currentColor,
           width: 3 / engine.scale,
           isHighlighter: false,
           points: points
@@ -147,39 +184,44 @@
         sync.emitElement(mathStroke);
       }
     };
+
+    // Panel de Acciones y QR
+    const btnActions = document.getElementById('btn-actions');
+    const panelActions = document.getElementById('panel-actions');
+    const btnQr = document.getElementById('btn-qr');
+    const modalQr = document.getElementById('modal-qr');
+    const qrContainer = document.getElementById('qr-container');
+    const qrUrlText = document.getElementById('qr-url-text');
+
+    btnActions.onclick = () => {
+      panelActions.classList.toggle('active');
+      modalQr.classList.remove('active');
+    };
+
+    btnQr.onclick = () => {
+      panelActions.classList.remove('active');
+      modalQr.classList.toggle('active');
+      const currentUrl = window.location.href;
+      qrUrlText.innerText = currentUrl;
+      QRManager.renderQR(currentUrl, qrContainer);
+    };
+
     document.getElementById('btn-reset-view').onclick = () => {
       input.setCamera(0, 0, 1.0);
       engine.setCamera(0, 0, 1.0);
+      panelActions.classList.remove('active');
     };
-    document.getElementById('color-picker').onchange = (e) => {
-      input.setTool(input.currentTool, e.target.value);
-    };
+
     document.getElementById('btn-clear').onclick = async () => {
       await storage.clearScene();
       engine.setElements([]);
       socket.emit('draw-action', { element: { id: 'clear_all', type: 'clear' } });
+      panelActions.classList.remove('active');
     };
 
-    // Modal QR
-    const qrBtn = document.getElementById('btn-qr');
-    const qrModal = document.getElementById('qr-modal');
-    const qrContainer = document.getElementById('qr-container');
-    const qrUrlText = document.getElementById('qr-url-text');
-
-    const currentUrl = window.location.href;
-    qrUrlText.innerText = currentUrl;
-    QRManager.renderQR(currentUrl, qrContainer);
-
-    qrBtn.onclick = () => {
-      qrModal.style.display = qrModal.style.display === 'block' ? 'none' : 'block';
-    };
-
-    function setActiveBtn(btn) {
-      document.querySelectorAll('.toolbar .btn').forEach(b => b.classList.remove('active'));
+    function setActiveToolBtn(btn) {
+      document.querySelectorAll('.pro-icon-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      if (window.innerWidth <= 600) {
-        toolbar.classList.remove('open');
-      }
     }
   </script>
 </body>
