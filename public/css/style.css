@@ -47,6 +47,13 @@ body, html {
   touch-action: none;
 }
 
+/* Lucide Icon Sizing in SVG */
+.lucide, svg.lucide {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2px;
+}
+
 /* ============================================================
    TOP NAVIGATION BAR
    ============================================================ */
@@ -94,7 +101,6 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
   transition: background 0.15s ease, color 0.15s ease;
   position: relative;
 }
@@ -112,6 +118,11 @@ body, html {
 .pro-icon-btn.active-red {
   color: var(--accent-red);
   background: rgba(248, 113, 113, 0.12);
+}
+
+.pro-icon-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
 }
 
 /* Zoom Badge en la Navbar */
@@ -278,7 +289,6 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -349,6 +359,11 @@ body, html {
   text-align: left;
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
+}
+
+.pro-popover-item .lucide {
+  width: 18px;
+  height: 18px;
 }
 
 .pro-popover-item:hover {
@@ -491,7 +506,7 @@ body, html {
   }
 
   .pro-slider-group {
-    display: none; /* Ocultar sliders en móvil por espacio */
+    display: none;
   }
 
   .pro-popover {

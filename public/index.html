@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Lienzo Infinito — Procreate Edition</title>
   <link rel="stylesheet" href="./css/style.css">
+  <!-- Lucide Icons (SVG Sprite / Global Script) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
   <div id="canvas-container"></div>
@@ -16,9 +18,9 @@
     <!-- IZQUIERDA -->
     <div class="pro-nav-group">
       <span class="pro-title">Lienzo Infinito</span>
-      <button id="btn-actions"   class="pro-icon-btn" title="Acciones">⚙️</button>
-      <button id="btn-undo-nav"  class="pro-icon-btn" title="Deshacer (Ctrl+Z)" disabled>↩️</button>
-      <button id="btn-redo-nav"  class="pro-icon-btn" title="Rehacer (Ctrl+Y)" disabled>↪️</button>
+      <button id="btn-actions" class="pro-icon-btn" title="Acciones"><i data-lucide="settings"></i></button>
+      <button id="btn-undo-nav" class="pro-icon-btn" title="Deshacer (Ctrl+Z)" disabled><i data-lucide="undo-2"></i></button>
+      <button id="btn-redo-nav" class="pro-icon-btn" title="Rehacer (Ctrl+Y)" disabled><i data-lucide="redo-2"></i></button>
       <button id="btn-zoom-reset" class="pro-zoom-badge" title="Resetear Zoom">100%</button>
     </div>
 
@@ -34,12 +36,12 @@
       <div style="width:1px; height:22px; background:var(--border); margin:0 4px;"></div>
 
       <!-- Herramientas -->
-      <button id="tool-pen"         class="pro-icon-btn active" title="Pluma">✏️</button>
-      <button id="tool-highlighter" class="pro-icon-btn" title="Resaltador">🖍️</button>
-      <button id="tool-eraser"      class="pro-icon-btn" title="Borrador">⌫</button>
-      <button id="tool-pan"         class="pro-icon-btn" title="Mover (espacio)">✋</button>
-      <button id="tool-text"        class="pro-icon-btn" title="Texto">T</button>
-      <button id="tool-math"        class="pro-icon-btn" title="Función f(x)">∫</button>
+      <button id="tool-pen" class="pro-icon-btn active" title="Pluma"><i data-lucide="pencil"></i></button>
+      <button id="tool-highlighter" class="pro-icon-btn" title="Resaltador"><i data-lucide="highlighter"></i></button>
+      <button id="tool-eraser" class="pro-icon-btn" title="Borrador"><i data-lucide="eraser"></i></button>
+      <button id="tool-pan" class="pro-icon-btn" title="Mover (espacio)"><i data-lucide="hand"></i></button>
+      <button id="tool-text" class="pro-icon-btn" title="Texto"><i data-lucide="type"></i></button>
+      <button id="tool-math" class="pro-icon-btn" title="Función f(x)"><i data-lucide="sigma"></i></button>
 
       <!-- Separador -->
       <div style="width:1px; height:22px; background:var(--border); margin:0 4px;"></div>
@@ -54,7 +56,7 @@
        ===================================================== -->
   <aside class="pro-sidebar-left">
     <!-- Undo -->
-    <button id="btn-undo" class="pro-sidebar-btn" title="Deshacer" disabled>↩</button>
+    <button id="btn-undo" class="pro-sidebar-btn" title="Deshacer" disabled><i data-lucide="undo-2"></i></button>
 
     <!-- Slider Tamaño -->
     <div class="pro-slider-group">
@@ -71,7 +73,7 @@
     </div>
 
     <!-- Redo -->
-    <button id="btn-redo" class="pro-sidebar-btn" title="Rehacer" disabled>↪</button>
+    <button id="btn-redo" class="pro-sidebar-btn" title="Rehacer" disabled><i data-lucide="redo-2"></i></button>
   </aside>
 
   <!-- =====================================================
@@ -80,18 +82,18 @@
   <div id="panel-actions" class="pro-popover" style="top:62px; left:12px; min-width:220px;">
     <div class="pro-popover-header">Acciones</div>
     <div class="pro-popover-list">
-      <button id="btn-qr"       class="pro-popover-item">📱 Emparejar con QR</button>
-      <button id="btn-export"   class="pro-popover-item">⬇️ Exportar PNG</button>
-      <button id="btn-grid"     class="pro-popover-item">⊞ Alternar Cuadrícula</button>
-      <button id="btn-clear"    class="pro-popover-item" style="color:var(--accent-red);">🗑️ Limpiar Lienzo</button>
+      <button id="btn-qr" class="pro-popover-item"><i data-lucide="qr-code"></i> Emparejar con QR</button>
+      <button id="btn-export" class="pro-popover-item"><i data-lucide="download"></i> Exportar PNG</button>
+      <button id="btn-grid" class="pro-popover-item"><i data-lucide="grid-3x3"></i> Alternar Cuadrícula</button>
+      <button id="btn-clear" class="pro-popover-item" style="color:var(--accent-red);"><i data-lucide="trash-2"></i> Limpiar Lienzo</button>
     </div>
   </div>
 
   <!-- POPOVER — QR Modal -->
   <div id="modal-qr" class="pro-popover" style="top:62px; left:12px; width:240px; text-align:center;">
-    <div class="pro-popover-header" style="display:flex;justify-content:space-between;">
+    <div class="pro-popover-header" style="display:flex;justify-content:space-between;align-items:center;">
       <span>Emparejar Dispositivo</span>
-      <button id="btn-qr-close" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;">✕</button>
+      <button id="btn-qr-close" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;display:flex;align-items:center;"><i data-lucide="x"></i></button>
     </div>
     <div id="qr-container" style="display:flex;justify-content:center;margin:12px 0;"></div>
     <p id="qr-url-text" style="font-size:10px;color:var(--text-secondary);word-break:break-all;font-family:monospace;"></p>
@@ -106,6 +108,11 @@
     import { QRManager }     from './js/QRManager.js';
     import { MathSuite }     from './js/MathSuite.js';
     import { ColorPalette }  from './js/ColorPalette.js';
+
+    // Inicializar iconos de Lucide
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
 
     // ── Room ID ──────────────────────────────────────────────
     const urlParams = new URLSearchParams(window.location.search);
@@ -297,7 +304,7 @@
         updateUndoRedo();
         sync.emitElement(el);
       } catch(err) {
-        showToast('❌ Función inválida');
+        showToast('Función inválida');
       }
     };
 
@@ -305,7 +312,6 @@
     function undo() {
       const elems = engine.undo();
       if (elems !== undefined) {
-        // Persistir el estado regresado
         storage.clearScene().then(() => storage.saveBatch(engine.elements));
         updateUndoRedo();
         showToast('Deshacer');
@@ -343,7 +349,6 @@
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
-      // Espacio = herramienta Pan temporal
       if (e.key === ' ' && !e.repeat) {
         e.preventDefault();
         input.setTool('pan');
@@ -379,12 +384,11 @@
       modalQr.classList.remove('active');
     };
 
-    // Cerrar paneles al hacer click fuera
     document.addEventListener('pointerdown', (e) => {
-      if (!panelActions.contains(e.target) && e.target !== document.getElementById('btn-actions')) {
+      if (!panelActions.contains(e.target) && !document.getElementById('btn-actions').contains(e.target)) {
         panelActions.classList.remove('active');
       }
-      if (!modalQr.contains(e.target) && e.target !== document.getElementById('btn-qr')) {
+      if (!modalQr.contains(e.target) && !document.getElementById('btn-qr').contains(e.target)) {
         modalQr.classList.remove('active');
       }
     });
@@ -402,7 +406,7 @@
     document.getElementById('btn-export').onclick = () => {
       engine.exportPNG();
       panelActions.classList.remove('active');
-      showToast('⬇️ Exportando PNG…');
+      showToast('Exportando PNG…');
     };
 
     document.getElementById('btn-grid').onclick = () => {
@@ -420,7 +424,7 @@
       updateUndoRedo();
       socket.emit('draw-action', { element: { id: 'clear_all', type: 'clear' } });
       panelActions.classList.remove('active');
-      showToast('🗑️ Lienzo limpio');
+      showToast('Lienzo limpio');
     };
 
     // ── Active Tool State ────────────────────────────────────
