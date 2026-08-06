@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -12,16 +13,19 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e5 // Límite de 100 KB por paquete (Hardening DoS)
 });
 
-// Configuración de cabeceras HTTP de Seguridad (Content Security Policy)
+// Configuración de cabeceras HTTP de Seguridad (Content Security Policy permisivo para CDNs y sourcemaps)
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss: https://cdn.jsdelivr.net;"
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   next();
 });
+
+// Servir dependencias locales si existen
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
 // Configuración de límites y seguridad (E-SWE & Threat Model)
 const ROOM_REGEX = /^[a-zA-Z0-9_-]{16,32}$/;

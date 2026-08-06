@@ -1,4 +1,4 @@
-import { get, set, del, keys } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
+import { get, set, del, keys } from '../node_modules/idb-keyval/dist/index.js';
 
 /**
  * StorageManager - Capa de almacenamiento IndexedDB Local-First e Idempotente.

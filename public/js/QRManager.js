@@ -1,4 +1,4 @@
-import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm';
+import QRCode from '../node_modules/qrcode/lib/browser.js';
 
 /**
  * QRManager.js - Generador Local y 100% preciso de Códigos QR.
@@ -24,7 +24,6 @@ export class QRManager {
       container.appendChild(canvas);
     } catch (err) {
       console.error('[QRManager] Error generando QR:', err);
-      // Fallback SVG simple si falla el canvas
       container.innerHTML = `<p style="color:red; font-size:12px;">Error generando QR</p>`;
     }
   }
