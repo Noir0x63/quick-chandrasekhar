@@ -1,5 +1,7 @@
+import { Math2D, simplifyRDP } from './Math2D.js';
+
 /**
- * CanvasEngine.js - Motor de Renderizado Multicapa con Cursos Remotos en Tiempo Real y Trazos en Vivo.
+ * CanvasEngine.js - Motor de Renderizado Multicapa con Soporte Nativo para Renderizado de LaTeX/KaTeX Vectorial.
  */
 export class CanvasEngine {
   constructor(containerElement) {
@@ -13,11 +15,11 @@ export class CanvasEngine {
     this.staticCanvas = document.createElement('canvas');
     this.staticCtx = this.staticCanvas.getContext('2d');
 
-    // Capa Dinámica (Interactive Canvas para trazo activo propio y trazos remotos en vivo a 60 FPS)
+    // Capa Dinámica (Interactive Canvas para trazo activo propio y trazos remotos en vivo)
     this.dynamicCanvas = document.createElement('canvas');
     this.dynamicCtx = this.dynamicCanvas.getContext('2d');
 
-    // Capa del Cursor (Ring de pincel local y cursores/punteros remotos con nombre/color)
+    // Capa del Cursor
     this.cursorCanvas = document.createElement('canvas');
     this.cursorCtx = this.cursorCanvas.getContext('2d');
 
@@ -34,17 +36,17 @@ export class CanvasEngine {
 
     this.elements = [];
     this.activeStroke = null;
-    this.remoteActiveStrokes = new Map(); // socketId -> stroke
-    this.remoteCursors = new Map(); // socketId -> { worldX, worldY, tool, color, name }
+    this.remoteActiveStrokes = new Map();
+    this.remoteCursors = new Map();
 
-    // Undo / Redo stacks
+    // Cache de Imágenes Renderizadas de LaTeX
+    this.latexCache = new Map(); // latexString_color_size -> ImageBitmap / HTMLImageElement
+
     this.historyStack = [[]];
     this.historyIndex = 0;
 
-    // Grid visible
     this.showGrid = true;
 
-    // Cursor del pincel local
     this.cursorX = -1000;
     this.cursorY = -1000;
     this.brushRadius = 4;
@@ -107,6 +109,11 @@ export class CanvasEngine {
     this.historyStack.push(this.elements.map(el => ({ ...el })));
     this.historyIndex = this.historyStack.length - 1;
 
+    this.renderStaticLayer();
+  }
+
+  removeElement(elementId) {
+    this.elements = this.elements.filter(el => el.id !== elementId);
     this.renderStaticLayer();
   }
 
@@ -235,12 +242,10 @@ export class CanvasEngine {
     ctx.translate(this.panX, this.panY);
     ctx.scale(this.scale, this.scale);
 
-    // Renderizar trazo activo local
     if (this.activeStroke) {
       this.drawElement(ctx, this.activeStroke);
     }
 
-    // Renderizar trazos en vivo activos de los usuarios remotos
     for (const stroke of this.remoteActiveStrokes.values()) {
       this.drawElement(ctx, stroke);
     }
@@ -255,7 +260,6 @@ export class CanvasEngine {
     ctx.save();
     ctx.scale(this.dpr, this.dpr);
 
-    // 1. Cursor de pincel local
     if (this.showCursor && this.cursorX >= 0) {
       const r = Math.max(2, (this.brushRadius * this.scale) / 2);
       ctx.beginPath();
@@ -270,7 +274,6 @@ export class CanvasEngine {
       ctx.fill();
     }
 
-    // 2. Cursores remotos sincronizados
     for (const [socketId, cursor] of this.remoteCursors.entries()) {
       if (cursor.worldX === undefined || cursor.worldY === undefined) continue;
 
@@ -278,11 +281,9 @@ export class CanvasEngine {
       const sy = cursor.worldY * this.scale + this.panY;
       const color = cursor.color || '#38bdf8';
 
-      // Puntero / Pincel remoto
       ctx.save();
       ctx.translate(sx, sy);
 
-      // Dibujar puntero estilo cursor
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, 14);
@@ -298,7 +299,6 @@ export class CanvasEngine {
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Etiqueta de identificador del usuario remoto
       const label = cursor.name || `User ${socketId.substring(0, 4)}`;
       ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
       const textWidth = ctx.measureText(label).width;
@@ -373,6 +373,55 @@ export class CanvasEngine {
       ctx.textBaseline = 'top';
       ctx.fillText(el.text || '', el.x, el.y);
       ctx.restore();
+
+    } else if (el.type === 'latex') {
+      this.drawLaTeXElement(ctx, el);
+    }
+  }
+
+  drawLaTeXElement(ctx, el) {
+    if (!window.katex) return;
+
+    const cacheKey = `${el.latex}_${el.color || '#38bdf8'}_${el.size || 24}`;
+
+    if (this.latexCache.has(cacheKey)) {
+      const img = this.latexCache.get(cacheKey);
+      ctx.save();
+      ctx.globalAlpha = el.opacity !== undefined ? el.opacity : 1.0;
+      ctx.drawImage(img, el.x, el.y);
+      ctx.restore();
+      return;
+    }
+
+    // Renderizar KaTeX a HTML String -> SVG -> Image
+    try {
+      const htmlStr = window.katex.renderToString(el.latex, {
+        displayMode: true,
+        throwOnError: false
+      });
+
+      const svgData = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="600" height="200">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="color: ${el.color || '#38bdf8'}; font-size: ${el.size || 24}px;">
+              ${htmlStr}
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+
+      const img = new Image();
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      img.onload = () => {
+        this.latexCache.set(cacheKey, img);
+        URL.revokeObjectURL(url);
+        this.renderStaticLayer();
+      };
+      img.src = url;
+    } catch (err) {
+      console.error('[KaTeX Canvas Error]:', err);
     }
   }
 

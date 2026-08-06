@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="./css/style.css">
   <!-- Lucide Icons (SVG Sprite / Global Script) -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- KaTeX CSS & JS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
 </head>
 <body>
   <div id="canvas-container"></div>
@@ -42,6 +45,7 @@
       <button id="tool-pan" class="pro-icon-btn" title="Mover (espacio)"><i data-lucide="hand"></i></button>
       <button id="tool-text" class="pro-icon-btn" title="Texto"><i data-lucide="type"></i></button>
       <button id="tool-math" class="pro-icon-btn" title="Función f(x)"><i data-lucide="sigma"></i></button>
+      <button id="btn-convert-latex" class="pro-icon-btn" title="Convertir Trazo Manuscrito a LaTeX"><i data-lucide="sparkles"></i></button>
 
       <!-- Separador -->
       <div style="width:1px; height:22px; background:var(--border); margin:0 4px;"></div>
@@ -260,7 +264,7 @@
       };
     });
 
-    // Herramienta de Texto Sincronizada
+    // Herramienta de Texto
     document.getElementById('tool-text').onclick = (e) => {
       input.setTool('pan');
       setActiveTool(e.currentTarget);
@@ -296,7 +300,7 @@
       container.addEventListener('pointerdown', onTextClick, { once: true });
     };
 
-    // Función f(x) Sincronizada
+    // Función f(x)
     document.getElementById('tool-math').onclick = () => {
       const fnStr = prompt('Función f(x):', 'Math.sin(x)');
       if (!fnStr) return;
@@ -319,7 +323,60 @@
       }
     };
 
-    // ── Undo / Redo (Sincronizado vía WebSockets) ───────────────
+    // CONVERSIÓN DE TRAZO MANUSCRITO A LATEX / MATHPIX (OPCIÓN A)
+    document.getElementById('btn-convert-latex').onclick = async () => {
+      const strokes = engine.elements.filter(el => el.type === 'stroke');
+      if (strokes.length === 0) {
+        showToast('Dibuja una fórmula primero');
+        return;
+      }
+
+      showToast('Reconociendo fórmula LaTeX…');
+
+      // Tomar el último trazo manuscrito
+      const lastStroke = strokes[strokes.length - 1];
+
+      try {
+        const res = await fetch('/api/recognize-latex', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ strokes: [lastStroke.points] })
+        });
+        const data = await res.json();
+
+        if (data.success && data.latex) {
+          const firstPtX = lastStroke.points[0] || 100;
+          const firstPtY = lastStroke.points[1] || 100;
+
+          // Crear elemento LaTeX en las coordenadas del trazo
+          const latexEl = {
+            id: 'latex_' + sync.clientId + '_' + Date.now(),
+            type: 'latex',
+            latex: data.latex,
+            x: firstPtX,
+            y: firstPtY,
+            color: input.currentColor,
+            size: 26,
+            opacity: 1.0
+          };
+
+          // Reemplazar el trazo manuscrito por el texto LaTeX formateado
+          engine.removeElement(lastStroke.id);
+          engine.addElement(latexEl);
+          updateUndoRedo();
+          sync.emitSceneReplace(engine.elements);
+
+          showToast('✨ Convertido a LaTeX');
+        } else {
+          showToast('Error reconociendo el trazo');
+        }
+      } catch (err) {
+        console.error('[LaTeX OCR Error]:', err);
+        showToast('Error en la conexión OCR');
+      }
+    };
+
+    // ── Undo / Redo ──────────────────────────────────────────
     function undo() {
       const elems = engine.undo();
       if (elems !== undefined) {
@@ -432,7 +489,7 @@
       engine.historyStack = [[]];
       engine.historyIndex = 0;
       updateUndoRedo();
-      sync.emitSceneReplace([]); // Sincronizar limpieza total a través de WebSocket
+      sync.emitSceneReplace([]);
       panelActions.classList.remove('active');
       showToast('Lienzo limpio');
     };
