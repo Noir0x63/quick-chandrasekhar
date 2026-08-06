@@ -1,5 +1,5 @@
 /**
- * SyncManager.js - Gestor de Sincronización Causal con Reloj Lógico de Lamport, Pending Sync Buffer y Transmisión en Tiempo Real.
+ * SyncManager.js - Gestor de Sincronización Causal con Reloj Lógico de Lamport, Pending Sync Buffer y Transmisión de Escena Completa (Undo/Redo Sync).
  */
 export class SyncManager {
   constructor(socket, storageManager, onSceneUpdated, callbacks = {}) {
@@ -36,6 +36,15 @@ export class SyncManager {
       } else {
         await this.processAction(payload);
       }
+    });
+
+    // Escuchar reemplazo completo de escena por Undo / Redo remoto
+    this.socket.on('scene-replace', async (payload) => {
+      this.tickClock(payload.clock || 0);
+      const elements = payload.elements || [];
+      await this.storage.clearScene();
+      await this.storage.saveBatch(elements);
+      this.onSceneUpdated(elements);
     });
 
     // Escuchar trazos en vivo mientras se dibujan en otros dispositivos
@@ -129,5 +138,22 @@ export class SyncManager {
     });
 
     this.socket.emit('draw-action', payload);
+  }
+
+  emitSceneReplace(elements) {
+    const clock = this.tickClock();
+    const payload = {
+      clientId: this.clientId,
+      clock,
+      elements
+    };
+
+    this.storage.clearScene().then(() => {
+      this.storage.saveBatch(elements).then(() => {
+        this.onSceneUpdated(elements);
+      });
+    });
+
+    this.socket.emit('scene-replace', payload);
   }
 }

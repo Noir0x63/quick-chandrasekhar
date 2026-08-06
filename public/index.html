@@ -212,7 +212,7 @@
           };
           engine.addElement(completed);
           engine.setActiveStroke(null);
-          sync.emitLiveStroke(null); // Limpiar trazo en vivo en los demás clientes
+          sync.emitLiveStroke(null);
           updateUndoRedo();
           sync.emitElement(completed);
         }
@@ -319,12 +319,12 @@
       }
     };
 
-    // ── Undo / Redo ──────────────────────────────────────────
+    // ── Undo / Redo (Sincronizado vía WebSockets) ───────────────
     function undo() {
       const elems = engine.undo();
       if (elems !== undefined) {
-        storage.clearScene().then(() => storage.saveBatch(engine.elements));
         updateUndoRedo();
+        sync.emitSceneReplace(elems);
         showToast('Deshacer');
       }
     }
@@ -332,8 +332,8 @@
     function redo() {
       const elems = engine.redo();
       if (elems !== undefined) {
-        storage.clearScene().then(() => storage.saveBatch(engine.elements));
         updateUndoRedo();
+        sync.emitSceneReplace(elems);
         showToast('Rehacer');
       }
     }

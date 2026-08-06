@@ -30,7 +30,7 @@ app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 // Configuración de límites y seguridad (E-SWE & Threat Model)
 const ROOM_REGEX = /^[a-zA-Z0-9_-]{16,32}$/;
 const RATE_LIMIT_WINDOW_MS = 1000;
-const MAX_MSGS_PER_SEC = 200; // Incrementado a 200 para trazos suaves en vivo a 60 FPS
+const MAX_MSGS_PER_SEC = 200;
 
 // Servir archivos estáticos
 app.use(express.static('public'));
@@ -82,6 +82,12 @@ io.on('connection', (socket) => {
   socket.on('draw-action', (actionPayload) => {
     if (!socket.roomId) return;
     socket.to(socket.roomId).emit('draw-action', actionPayload);
+  });
+
+  // Evento: Reemplazo / Sincronización completa de Escena (por Undo/Redo global)
+  socket.on('scene-replace', (scenePayload) => {
+    if (!socket.roomId) return;
+    socket.to(socket.roomId).emit('scene-replace', scenePayload);
   });
 
   // Evento: Transmisión de trazo en vivo (Stroke Live) mientras el usuario dibuja a 60 FPS
