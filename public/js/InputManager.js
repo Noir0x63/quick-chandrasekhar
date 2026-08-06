@@ -1,7 +1,7 @@
 import { Math2D, simplifyRDP } from './Math2D.js';
 
 /**
- * InputManager.js - Gestor de Entrada Completo con Pan/Zoom Multi-Touch, Rueda de Ratón (Shift/Alt o Clic Central), Eraser, Opacidad y Cursor CSS.
+ * InputManager.js - Gestor de Entrada Completo con Pan/Zoom Multi-Touch, Zoom por Rueda de Ratón exclusivo, Eraser, Opacidad y Cursor CSS.
  */
 export class InputManager {
   constructor(targetElement, callbacks = {}) {
@@ -221,25 +221,15 @@ export class InputManager {
   handleWheel(e) {
     e.preventDefault();
 
-    // Si se presiona Ctrl o Meta, la rueda hace Zoom.
-    // De lo contrario (rueda por defecto, o con Shift/Alt), desplaza (Pan vertical u horizontal).
-    if (e.ctrlKey || e.metaKey) {
-      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
-      const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
-      const newPanY = e.clientY - (e.clientY - this.panY) * (newScale / this.scale);
+    // La rueda de desplazamiento se encarga EXCLUSIVAMENTE del ZOOM centrado en el cursor del ratón.
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newScale = Math.max(0.05, Math.min(50, this.scale * zoomFactor));
+    const newPanX = e.clientX - (e.clientX - this.panX) * (newScale / this.scale);
+    const newPanY = e.clientY - (e.clientY - this.panY) * (newScale / this.scale);
 
-      this.panX = newPanX;
-      this.panY = newPanY;
-      this.scale = newScale;
-    } else {
-      // Pan directo desplazando con la rueda del ratón o Trackpad
-      const dx = e.shiftKey ? e.deltaY : e.deltaX;
-      const dy = e.shiftKey ? 0 : e.deltaY;
-
-      this.panX -= dx;
-      this.panY -= dy;
-    }
+    this.panX = newPanX;
+    this.panY = newPanY;
+    this.scale = newScale;
 
     this.onPanZoom(this.panX, this.panY, this.scale);
   }
