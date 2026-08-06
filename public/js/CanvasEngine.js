@@ -69,6 +69,17 @@ export class CanvasEngine {
     this.renderStaticLayer();
   }
 
+  addElement(element) {
+    if (!element) return;
+    const existingIndex = this.elements.findIndex(el => el.id === element.id);
+    if (existingIndex >= 0) {
+      this.elements[existingIndex] = element;
+    } else {
+      this.elements.push(element);
+    }
+    this.renderStaticLayer();
+  }
+
   setActiveStroke(stroke) {
     this.activeStroke = stroke;
     this.renderDynamicLayer();

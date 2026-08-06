@@ -83,9 +83,8 @@ export class InputManager {
       this.target.releasePointerCapture(e.pointerId);
     }
 
-    // Preservar la secuencia de puntos completa
     const finalPoints = [...this.currentPoints];
-    const simplifiedPoints = finalPoints.length > 4 ? simplifyRDP(finalPoints, 0.5 / this.scale) : finalPoints;
+    const simplifiedPoints = finalPoints.length > 4 ? simplifyRDP(finalPoints, 0.2 / this.scale) : finalPoints;
 
     this.onStrokeEnd({
       tool: this.currentTool,

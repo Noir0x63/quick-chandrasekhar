@@ -93,8 +93,12 @@
             ...engine.activeStroke,
             points: stroke.points
           };
-          sync.emitElement(completedStroke);
+          // Transfeir de forma inmediata a la Capa Estática local para cero parpadeos
+          engine.addElement(completedStroke);
           engine.setActiveStroke(null);
+
+          // Emitir a la red e IndexedDB
+          sync.emitElement(completedStroke);
         }
       },
       onPanZoom: (panX, panY, scale) => {
@@ -127,6 +131,7 @@
           isHighlighter: false,
           points: points
         };
+        engine.addElement(mathStroke);
         sync.emitElement(mathStroke);
       }
     };
