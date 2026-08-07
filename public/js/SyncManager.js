@@ -26,6 +26,7 @@ export class SyncManager {
     return this.lamportClock;
   }
 
+  bindSocketEvents() {
     // Escuchar escena inicial autoritativa enviada por el servidor SQLite
     this.socket.on('initial-scene', async (payload) => {
       const elements = payload.elements || [];
