@@ -87,6 +87,8 @@ io.use((socket, next) => {
   next();
 });
 
+const dbStorage = require('./db');
+
 io.on('connection', (socket) => {
   socket.use(([event, ...args], next) => {
     const now = Date.now();
@@ -115,16 +117,33 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     console.log(`[Socket] Client ${socket.id} joined room: ${roomId}`);
+
+    // Emitir inmediatamente la escena autoritativa guardada en SQLite
+    const initialScene = dbStorage.getScene(roomId);
+    socket.emit('initial-scene', { elements: initialScene });
+
     socket.to(roomId).emit('user-connected', { userId: socket.id });
   });
 
   socket.on('draw-action', (actionPayload) => {
-    if (!socket.roomId) return;
+    if (!socket.roomId || !actionPayload) return;
+    
+    // Guardar o eliminar en SQLite
+    if (actionPayload.type === 'delete' && actionPayload.elementId) {
+      dbStorage.deleteElement(socket.roomId, actionPayload.elementId);
+    } else if (actionPayload.element) {
+      dbStorage.saveElement(socket.roomId, actionPayload.element, actionPayload.clock || 0);
+    }
+
     socket.to(socket.roomId).emit('draw-action', actionPayload);
   });
 
   socket.on('scene-replace', (scenePayload) => {
-    if (!socket.roomId) return;
+    if (!socket.roomId || !scenePayload || !Array.isArray(scenePayload.elements)) return;
+
+    // Guardar el estado de la escena en SQLite
+    dbStorage.replaceScene(socket.roomId, scenePayload.elements, scenePayload.clock || 0);
+
     socket.to(socket.roomId).emit('scene-replace', scenePayload);
   });
 
@@ -134,16 +153,6 @@ io.on('connection', (socket) => {
       socketId: socket.id,
       stroke: data.stroke
     });
-  });
-
-  socket.on('sync-request', () => {
-    if (!socket.roomId) return;
-    socket.to(socket.roomId).emit('sync-request', { requesterId: socket.id });
-  });
-
-  socket.on('sync-chunk', (chunkPayload) => {
-    if (!socket.roomId || !chunkPayload || !chunkPayload.targetId) return;
-    io.to(chunkPayload.targetId).emit('sync-chunk', chunkPayload);
   });
 
   socket.on('cursor-move', (cursorPayload) => {

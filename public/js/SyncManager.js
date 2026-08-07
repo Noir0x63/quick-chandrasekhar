@@ -26,7 +26,14 @@ export class SyncManager {
     return this.lamportClock;
   }
 
-  bindSocketEvents() {
+    // Escuchar escena inicial autoritativa enviada por el servidor SQLite
+    this.socket.on('initial-scene', async (payload) => {
+      const elements = payload.elements || [];
+      await this.storage.clearScene();
+      await this.storage.saveBatch(elements);
+      this.onSceneUpdated(elements);
+    });
+
     // Escuchar deltas finalizados o eventos de borrado
     this.socket.on('draw-action', async (payload) => {
       this.tickClock(payload.clock || 0);
@@ -60,43 +67,6 @@ export class SyncManager {
     // Escuchar desconexión de usuarios
     this.socket.on('user-disconnected', (data) => {
       this.onUserDisconnected(data.userId);
-    });
-
-    // Escuchar solicitud de sincronización por parte de un peer nuevo
-    this.socket.on('sync-request', async ({ requesterId }) => {
-      const scene = await this.storage.getScene();
-      const CHUNK_SIZE = 50;
-      const totalChunks = Math.ceil(scene.length / CHUNK_SIZE) || 1;
-
-      for (let i = 0; i < totalChunks; i++) {
-        const chunkData = scene.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        this.socket.emit('sync-chunk', {
-          targetId: requesterId,
-          chunkIndex: i,
-          totalChunks,
-          data: chunkData
-        });
-      }
-    });
-
-    // Escuchar recepción de chunks de sincronización inicial
-    this.socket.on('sync-chunk', async ({ chunkIndex, totalChunks, data }) => {
-      if (chunkIndex === 0) {
-        this.isHydrating = true;
-      }
-
-      await this.storage.saveBatch(data);
-
-      if (chunkIndex === totalChunks - 1) {
-        for (const pendingAction of this.pendingBuffer) {
-          await this.processAction(pendingAction);
-        }
-        this.pendingBuffer = [];
-        this.isHydrating = false;
-
-        const updatedScene = await this.storage.getScene();
-        this.onSceneUpdated(updatedScene);
-      }
     });
   }
 

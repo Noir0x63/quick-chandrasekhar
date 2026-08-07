@@ -176,8 +176,9 @@
     });
 
     storage.getScene().then((scene) => {
-      engine.setElements(scene);
-      socket.emit('sync-request');
+      if (scene && scene.length > 0) {
+        engine.setElements(scene);
+      }
     });
 
     // ── Input Manager ────────────────────────────────────────
