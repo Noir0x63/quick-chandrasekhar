@@ -81,6 +81,12 @@ body, html {
   gap: 4px;
 }
 
+.pro-tools-scroll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .pro-title {
   font-size: 14px;
   font-weight: 600;
