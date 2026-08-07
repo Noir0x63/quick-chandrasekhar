@@ -486,8 +486,8 @@ body, html {
 
 @media (max-width: 600px) {
   .pro-navbar {
-    padding: 0 8px;
-    height: 50px;
+    padding: 0 6px;
+    height: 52px;
   }
 
   .pro-title {
@@ -498,27 +498,65 @@ body, html {
     display: none;
   }
 
-  .pro-sidebar-left {
-    left: 8px;
-    padding: 10px 6px;
-    gap: 10px;
-    border-radius: 18px;
+  .pro-nav-group {
+    gap: 2px;
+    max-width: 100%;
   }
 
-  .pro-slider-group {
+  /* Hacer el grupo de herramientas scrolleable horizontalmente en móviles estrechos */
+  .pro-tools-scroll {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: calc(100vw - 110px);
+    padding: 2px 0;
+  }
+
+  .pro-tools-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  .pro-icon-btn {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .pro-peer-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .pro-sidebar-left {
+    left: 8px;
+    top: auto;
+    bottom: 24px;
+    transform: none;
+    padding: 8px 6px;
+    gap: 12px;
+    border-radius: 20px;
+  }
+
+  /* En móvil, los sliders son desplegables o reducidos para no tapar pantalla */
+  .pro-slider-vertical {
+    width: 80px;
+    margin: 35px -35px;
   }
 
   .pro-popover {
     left: 8px !important;
     right: 8px !important;
     width: auto !important;
-    top: 58px !important;
+    top: 56px !important;
   }
 
   .color-palette-panel {
     left: 8px !important;
     right: 8px !important;
     width: auto !important;
+    top: 56px !important;
   }
 }
